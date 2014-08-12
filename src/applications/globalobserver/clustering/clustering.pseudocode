@@ -1,0 +1,12 @@
+receiving(notification)
+begin
+   store each datum in the corresponding list
+   if reception = 50 then
+      computeNeighborhood()
+      clustering()
+      computeStats()
+      reset reception
+   end if
+end
+
+
