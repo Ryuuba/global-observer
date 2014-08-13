@@ -10,6 +10,7 @@ Clustering::Clustering()
    updateDelay = 0.0;
    receivedMessages = 0;
    criterion = " ";
+   isRoleListInitialized = false;
 }
 
 Clustering::~Clustering(){}
@@ -64,6 +65,7 @@ void
 Clustering::updateTable()
 {
    computeNeighborhood();
+   clustering();
    EV << globalNodeTable.info() << endl;
 }
 
@@ -92,8 +94,7 @@ Clustering::computeNeighborhood()
 }
 
 Neighborhood
-Clustering::
-computeNeighborhood(uint32_t nodeID)
+Clustering::computeNeighborhood(uint32_t nodeID)
 {
    Neighborhood n;
    //Quick access to the node data
@@ -129,3 +130,115 @@ Clustering::computeNeighborhood(uint32_t nodeID, uint8_t k)
    return n;
 }
 
+void
+Clustering::clustering()
+{
+   const uint32_t* leaderID;
+   if(isRoleListInitialized)
+      initializeRoleList();
+   do
+   {
+      leaderID = getLeader();
+      if (leaderID)
+      {
+         makeCluster(*leaderID);
+         ev << "Leader ID: " << (int)*leaderID << endl;
+      }
+   }while(leaderID);
+   if(ev.isGUI())
+      changeIconColor();
+}
+
+const uint32_t*
+Clustering::getLeader()
+{
+   const uint32_t* leaderID;
+   if(criterion == "degree")
+      leaderID = getLeaderByDegree();
+   return leaderID;
+}
+
+//TODO: The UID must be considered to break ties
+const uint32_t*
+Clustering::getLeaderByDegree()
+{
+   const uint32_t* leaderID = NULL;
+   uint8_t maxDegree = 0;
+   for(auto& pair: globalNodeTable)
+   {
+      if(*pair.second.getRole() == Role::UNCLUSTERED)
+      {
+         auto degree = pair.second.getOneHopIterator().
+                       second->value().size();
+         if(degree > maxDegree)
+         {
+            leaderID = pair.second.getUID();
+            maxDegree = degree;
+         }
+      }
+   }
+   return leaderID;
+}
+
+void
+Clustering::initializeRoleList()
+{
+   for(auto& pair : globalNodeTable)
+   {
+      auto uid = pair.second.getUID();
+      globalNodeTable.setRole(*uid, Role::UNCLUSTERED);
+   }
+   isRoleListInitialized = true;
+}
+
+void
+Clustering::makeCluster(uint32_t leaderID)
+{
+   const Neighborhood* cluster;
+   //sets role LEADER
+   globalNodeTable.setRole(leaderID, Role::LEADER);
+   //sets cid using the CID leader ID
+   globalNodeTable.setCid(leaderID, leaderID);
+   //gets the k-hop neighborhood of the leader
+   cluster = globalNodeTable.
+             getState(leaderID).getKHop();
+   //clusters all nodes that belongs to the k-hop
+   //neighborhood of the leader. neighbor is the UID of
+   //each node in the k-hop neighborhood of the leader
+   for(auto& neighbor : *cluster)
+      if(*globalNodeTable.getState(neighbor).getRole() == 
+         Role::UNCLUSTERED)
+      {
+         //sets to neighbor the role CLUSTERED
+         globalNodeTable.setRole(neighbor,Role::CLUSTERED);
+         //sets to neighbor a CID equals the leader ID
+         globalNodeTable.setCid(neighbor, leaderID);
+      }
+}
+
+void
+Clustering::changeIconColor()
+{
+   cModule* host;
+   const uint32_t* index;
+   for(auto& pair : globalNodeTable)
+   {
+      index = pair.second.getUID();//first?
+      host = simulation.
+             getSystemModule()->
+             getSubmodule("host", *index);
+      if(host)
+      {
+         cDisplayString& displayStr = host->
+                                         getDisplayString();
+         const Role* role = globalNodeTable.
+                            getState(*index).getRole();
+         if(*role == Role::LEADER)
+            displayStr.
+            parse("i=device/pocketpc_s,blue");
+         else if (*role == Role::CLUSTERED)
+            displayStr.
+            parse("i=device/pocketpc_s,gold");
+      }
+   }
+}

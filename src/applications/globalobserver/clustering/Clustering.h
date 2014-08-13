@@ -23,6 +23,8 @@ public IGlobalObserver{
       uint8_t receivedMessages;
       //Data structure storing the state of the nodes
       Table globalNodeTable;
+      //Flag indicating if role list is initialized
+      bool isRoleListInitialized;
       
    protected:
       //It initializes the protected attributes with the
@@ -51,16 +53,29 @@ public IGlobalObserver{
          computeNeighborhood(uint32_t nodeID, uint8_t k);
       
       //Computes clusters in a centralized manner
-      //virtual void clustering();
+      virtual void clustering();
       
-      //virtual uint32_t getLeader();
+      //Computes the leader according the value of
+      //criterion string. Returns a NULL pointer when there
+      //aren't UNCLUSTERED nodes
+      virtual const uint32_t* getLeader();
       
-      //virtual uint32_t getLeaderByDegree();
+      //Computes leaders according the degree criterion.
+      //Returns a NULL pointer when there aren't 
+      //UNCLUSTERED nodes
+      virtual const uint32_t* getLeaderByDegree();
       
-      //virtual void makeCluster(uint32_t leaderID);
+      //Creates k-hop clusters around leaders
+      virtual void makeCluster(uint32_t leaderID);
+
+      //Initialized the role list getting the UID of each
+      //node in table, then it inserts to each node the
+      //UNCLUSTERED role. Besides, it changes the value
+      //of isRoleListInitialized to true
+      virtual void initializeRoleList();
       
       //Colors leaders in red and clustered nodes in gold
-      //virtual void changeIconColor();
+      virtual void changeIconColor();
             
       
    public:
