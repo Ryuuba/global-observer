@@ -46,7 +46,6 @@ Clustering::handleMessage(cMessage* msg)
       Notification* data = 
       check_and_cast<Notification*>(msg);
       uint32_t id = data->getSource();
-      ev << "Notification from: "<< id << endl;
       globalNodeTable.
       setPosition(id, data->getPosition());
       globalNodeTable.
@@ -66,7 +65,7 @@ Clustering::updateTable()
 {
    computeNeighborhood();
    clustering();
-   EV << globalNodeTable.info() << endl;
+   ev << globalNodeTable.info();
 }
 
 void
