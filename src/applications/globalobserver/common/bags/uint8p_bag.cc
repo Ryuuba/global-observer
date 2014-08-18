@@ -25,19 +25,19 @@ uint8p_bag::erase(iterator it)
 }
 
 uint8p_bag::iterator
-uint8p_bag::begin()
+uint8p_bag::begin() const
 {
    return bag.begin();
 }
 
 uint8p_bag::iterator
-uint8p_bag::max()
+uint8p_bag::max() const
 {
    return --bag.end();
 }
 
 uint8p_bag::iterator
-uint8p_bag::end()
+uint8p_bag::end() const
 {
    return bag.end();
 }
@@ -58,6 +58,12 @@ void
 uint8p_bag::clear()
 {
    bag.clear();
+}
+
+bool
+uint8p_bag::empty()
+{
+   return bag.empty();
 }
 
 std::ostream&

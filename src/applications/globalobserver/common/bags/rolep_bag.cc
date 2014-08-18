@@ -60,6 +60,12 @@ rolep_bag::clear()
    bag.clear();
 }
 
+bool
+rolep_bag::empty()
+{
+   return bag.empty();
+}
+
 std::ostream&
 operator << (std::ostream& os, rolep_bag& bag)
 {

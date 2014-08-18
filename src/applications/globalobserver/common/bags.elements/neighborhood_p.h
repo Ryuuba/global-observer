@@ -37,9 +37,9 @@ class neighborhood_p
 };
 
 inline std::ostream&
-operator << (std::ostream& os, const neighborhood_p& pair_t)
+operator << (std::ostream& o, const neighborhood_p& pair_t)
 {
-   return os << pair_t.key() << ": "
+   return o << pair_t.key() << ": "
              << pair_t.value().info();
 }
 #endif

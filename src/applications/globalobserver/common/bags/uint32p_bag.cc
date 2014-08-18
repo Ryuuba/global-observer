@@ -25,19 +25,19 @@ uint32p_bag::erase(iterator it)
 }
 
 uint32p_bag::iterator
-uint32p_bag::begin()
+uint32p_bag::begin() const
 {
    return bag.begin();
 }
 
 uint32p_bag::iterator
-uint32p_bag::max()
+uint32p_bag::max() const
 {
    return --bag.end();
 }
 
 uint32p_bag::iterator
-uint32p_bag::end()
+uint32p_bag::end() const
 {
    return bag.end();
 }
@@ -58,6 +58,12 @@ void
 uint32p_bag::clear()
 {
    bag.clear();
+}
+
+bool
+uint32p_bag::empty()
+{
+   return bag.empty();
 }
 
 std::ostream&

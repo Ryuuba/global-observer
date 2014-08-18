@@ -25,19 +25,19 @@ doublep_bag::erase(iterator it)
 }
 
 doublep_bag::iterator
-doublep_bag::begin()
+doublep_bag::begin() const
 {
    return bag.begin();
 }
 
 doublep_bag::iterator
-doublep_bag::max()
+doublep_bag::max() const
 {
    return --bag.end();
 }
 
 doublep_bag::iterator
-doublep_bag::end()
+doublep_bag::end() const
 {
    return bag.end();
 }
@@ -58,6 +58,12 @@ void
 doublep_bag::clear()
 {
    bag.clear();
+}
+
+bool
+doublep_bag::empty()
+{
+   return bag.empty();
 }
 
 std::ostream&

@@ -27,6 +27,7 @@ class neighborhoodp_bag
       virtual iterator max();
       virtual unsigned int size();
       virtual void clear();
+      virtual bool empty();
 };
 
 std::ostream&

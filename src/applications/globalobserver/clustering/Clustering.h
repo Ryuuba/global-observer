@@ -30,9 +30,9 @@ public IGlobalObserver{
       //It initializes the protected attributes with the
       //omnetpp.ini-file data 
       virtual void initialize();
-      //It calls methods to compute the state of the network
-      //nodes and it adds and updates the Table with the
-      //messages sent by network nodes.
+      //It calls methods to compute the state of the
+      //network nodes and it adds and updates the Table
+      //with the messages sent by network nodes.
       virtual void handleMessage(cMessage* msg);
       
       //Updates the global node table content
@@ -53,7 +53,7 @@ public IGlobalObserver{
          computeNeighborhood(uint32_t nodeID, uint8_t k);
       
       //Computes clusters in a centralized manner
-      virtual void clustering();
+      virtual void makeClusters();
       
       //Computes the leader according the value of
       //criterion string. Returns a NULL pointer when there

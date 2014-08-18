@@ -26,6 +26,7 @@ class rolep_bag
       virtual unsigned int count(role_p pair_t);
       virtual unsigned int size();
       virtual void clear();
+      virtual bool empty();
 };
 
 std::ostream&

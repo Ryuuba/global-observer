@@ -26,19 +26,19 @@ simtimep_bag::erase(iterator it)
 }
 
 simtimep_bag::iterator
-simtimep_bag::begin()
+simtimep_bag::begin() const
 {
    return bag.begin();
 }
 
 simtimep_bag::iterator
-simtimep_bag::max()
+simtimep_bag::max() const
 {
    return --bag.end();
 }
 
 simtimep_bag::iterator
-simtimep_bag::end()
+simtimep_bag::end() const
 {
    return bag.end();
 }
@@ -59,6 +59,12 @@ void
 simtimep_bag::clear()
 {
    bag.clear();
+}
+
+bool
+simtimep_bag::empty()
+{
+   return bag.empty();
 }
 
 std::ostream&

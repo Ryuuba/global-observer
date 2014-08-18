@@ -65,6 +65,12 @@ neighborhoodp_bag::clear()
    bag.clear();
 }
 
+bool
+neighborhoodp_bag::empty()
+{
+   return bag.empty();
+}
+
 std::ostream&
 operator <<(std::ostream& os, const neighborhoodp_bag& bag)
 {

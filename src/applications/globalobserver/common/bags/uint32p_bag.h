@@ -18,12 +18,13 @@ class uint32p_bag
       virtual iterator insert(uint32_p pair_t);
       virtual iterator insert(uint32_t id, uint32_t v);
       virtual iterator erase(iterator it);
-      virtual iterator begin();
-      virtual iterator max();
-      virtual iterator end();
+      virtual iterator begin() const;
+      virtual iterator max() const;
+      virtual iterator end() const;
       virtual unsigned int count(uint32_p pair_t);
       virtual unsigned int size();
       virtual void clear();
+      virtual bool empty();
 };
 
 std::ostream&

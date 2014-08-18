@@ -47,13 +47,13 @@ class node_state
    public:
       node_state();
       virtual ~node_state();
-      /*************** Getter state methods ***************/
+      /*************** Getter state methods **************/
       //They return a pointer to the specific value of a
       //node feature. If the corresponding iterator is
       //invalid, then these methods return a NULL pointer.
-      //Note that pointers point to const value, so they can
-      //be used to modify node attributes because they are
-      //only-read.
+      //Note that pointers point to const value, so they
+      //can be used to modify node attributes because they
+      //are only-read.
       virtual const uint32_t* getUID() const;
       virtual const Coord* getPosition() const;
       virtual const double* getSpeed() const;

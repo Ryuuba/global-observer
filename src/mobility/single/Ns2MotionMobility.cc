@@ -137,10 +137,7 @@ void Ns2MotionMobility::initialize(int stage)
         scrollY = par("scrollY");
         nodeId = par("nodeId");
         if (nodeId == -1)
-        {
-            nodeId = getContainingNode(this)->getIndex() + 1;
-            EV_TRACE << "Node ID: " << nodeId << endl;
-        }
+            nodeId = getContainingNode(this)->getIndex();
         const char *fname = par("traceFile");
         ns2File = new Ns2MotionFile;
         parseFile(fname);
@@ -160,33 +157,21 @@ void Ns2MotionMobility::setTargetPosition()
 
     if (ns2File->lines.size()==0)
     {
-        nextChange = -1;
         stationary = true;
-        targetPosition = lastPosition;
-        return; 
-        //stationary = true;
-        //return;
+        return;
     }
 
     if (vecpos >= ns2File->lines.size())
     {
-        nextChange = -1;
         stationary = true;
-        targetPosition = lastPosition;
-        return; 
-        //stationary = true;
-        //return;
+        return;
     }
 
 
     if (ns2File->lines.begin()+vecpos == ns2File->lines.end())
     {
-        nextChange = -1;
         stationary = true;
-        targetPosition = lastPosition;
-        return;    
-        //stationary = true;
-        //return;
+        return;
     }
 
     const Ns2MotionFile::Line& vec = ns2File->lines[vecpos];
@@ -216,7 +201,6 @@ void Ns2MotionMobility::setTargetPosition()
         nextChange = now + travelTime;
         vecpos++;
     }
-    
 }
 
 void Ns2MotionMobility::move()

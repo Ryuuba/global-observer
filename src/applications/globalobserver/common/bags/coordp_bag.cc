@@ -25,19 +25,19 @@ coordp_bag::erase(iterator it)
 }
 
 coordp_bag::iterator
-coordp_bag::begin()
+coordp_bag::begin() const
 {
    return bag.begin();
 }
 
 coordp_bag::iterator
-coordp_bag::max()
+coordp_bag::max() const
 {
    return --bag.end();
 }
 
 coordp_bag::iterator
-coordp_bag::end()
+coordp_bag::end() const
 {
    return bag.end();
 }
@@ -58,6 +58,12 @@ void
 coordp_bag::clear()
 {
    bag.clear();
+}
+
+bool
+coordp_bag::empty()
+{
+   return bag.empty();
 }
 
 std::ostream&
