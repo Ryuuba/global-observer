@@ -37,6 +37,10 @@ public IGlobalObserver{
       
       //Updates the global node table content
       virtual void updateTable();
+
+      //Updates an global-node-table entry using a message
+      //sent by a node
+      virtual void updateTable(cMessage* msg);
       
       //invokes both computeNeighborhood(uint32_t nodeID)
       //and computeNeighborhood(uint32_t nodeID, uint8_t k)
@@ -58,12 +62,12 @@ public IGlobalObserver{
       //Computes the leader according the value of
       //criterion string. Returns a NULL pointer when there
       //aren't UNCLUSTERED nodes
-      virtual const uint32_t* getLeader();
+      virtual std::pair<bool,uint32_t> getLeader();
       
       //Computes leaders according the degree criterion.
       //Returns a NULL pointer when there aren't 
       //UNCLUSTERED nodes
-      virtual const uint32_t* getLeaderByDegree();
+      virtual std::pair<bool,uint32_t> getLeaderByDegree();
       
       //Creates k-hop clusters around leaders
       virtual void makeCluster(uint32_t leaderID);

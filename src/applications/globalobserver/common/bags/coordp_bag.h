@@ -26,7 +26,7 @@ class coordp_bag
       virtual unsigned int count(coord_p pair_t);
       virtual unsigned int size();
       virtual void clear();
-      virtual bool empty();
+      virtual bool empty() const;
 };
 
 std::ostream&

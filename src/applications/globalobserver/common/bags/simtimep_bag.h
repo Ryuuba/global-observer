@@ -26,7 +26,7 @@ class simtimep_bag
       virtual unsigned int count(simtime_p pair_t);
       virtual unsigned int size();
       virtual void clear();
-      virtual bool empty();
+      virtual bool empty() const;
 };
 
 std::ostream&

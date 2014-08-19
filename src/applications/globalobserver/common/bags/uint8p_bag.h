@@ -24,9 +24,9 @@ class uint8p_bag
       virtual iterator max() const;
       virtual iterator end() const;
       virtual unsigned int count(uint8_p pair_t);
-      virtual unsigned int size();
+      virtual unsigned int size() const;
       virtual void clear();
-      virtual bool empty();
+      virtual bool empty() const;
 };
 
 std::ostream&

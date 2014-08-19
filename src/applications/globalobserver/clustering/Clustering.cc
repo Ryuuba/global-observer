@@ -42,22 +42,24 @@ Clustering::handleMessage(cMessage* msg)
       scheduleAt(simTime()+1, msg);
    }
    else
-   {
-      Notification* data = 
-      check_and_cast<Notification*>(msg);
-      uint32_t id = data->getSource();
-      globalNodeTable.
-      setPosition(id, data->getPosition());
-      globalNodeTable.
-      setPauseTime(id, data->getPauseTime());
-      globalNodeTable.
-      setMotionTime(id, data->getMotionTime());
-      globalNodeTable.setSpeed(id, data->getSpeed());
-      globalNodeTable.
-      setFlightLength(id, data->getFlightLength());
-      receivedMessages++;
-      delete msg;
-   }
+      updateTable(msg);
+}
+
+void
+Clustering::updateTable(cMessage* msg)
+{
+   Notification* data = 
+   check_and_cast<Notification*>(msg);
+   uint32_t id = data->getSource();
+   globalNodeTable.setPosition(id, data->getPosition());
+   globalNodeTable.setPauseTime(id, data->getPauseTime());
+   globalNodeTable.
+   setMotionTime(id, data->getMotionTime());
+   globalNodeTable.setSpeed(id, data->getSpeed());
+   globalNodeTable.
+   setFlightLength(id, data->getFlightLength());
+   receivedMessages++;
+   delete msg;
 }
 
 void
@@ -71,57 +73,65 @@ Clustering::updateTable()
 void
 Clustering::makeClusters()
 {
-   const uint32_t* leaderID;
+   std::pair<bool,uint32_t> leader;
    if(!isRoleListInitialized)
-   {
-      std::cout << "Initializing role list . . ."
-                << std::endl;
       initializeRoleList();
-   }
    do
    {
-      leaderID = getLeader();
-      if (leaderID)
-      {
-         makeCluster(*leaderID);
-         ev << "Leader ID: " << (int)*leaderID << endl;
-      }
-   }while(leaderID);
+      leader = getLeader();
+      if(leader.first)
+         makeCluster(leader.second);
+   }while(leader.first);
    if(ev.isGUI())
       changeIconColor();
 }
 
-const uint32_t*
+std::pair<bool,uint32_t>
 Clustering::getLeader()
 {
-   const uint32_t* leaderID;
+   std::pair<bool,uint32_t> leader;
    if(criterion == "degree")
-      leaderID = getLeaderByDegree();
-   return leaderID;
+      leader = getLeaderByDegree();
+   return leader;
 }
 
 //TODO: The UID must be considered to break ties
-const uint32_t*
+std::pair<bool,uint32_t>
 Clustering::getLeaderByDegree()
 {
-   const uint32_t* leaderID = NULL, tempID;
+   uint32_t leaderID;
+   bool isLeaderInitialized = false;
+   const uint32_t* tempID = NULL;
    uint8_t maxDegree = 0, degree;
-   for(auto& pair : *globalNodeTable.accessRoleList())
-      if(pair.second == Role::UNCLUSTERED)
+   const rolep_bag* roleList =
+         globalNodeTable.accessRoleList();
+   for(auto& pair : *roleList)
+      if(pair.value() == Role::UNCLUSTERED)
       {
-         degree = globalNodeTable.getState(pair.first).
+         degree = globalNodeTable.getState(pair.key()).
                   getOneHop()->size();
-         tempID = globalNodeTable.getState(pair.first).
+         tempID = globalNodeTable.getState(pair.key()).
                   getUID();
-         if(degree => maxDegree && degree > 0)
+         std::cout << (int)degree << ", "
+                   << *tempID << std::endl;
+         if(isLeaderInitialized)
          {
-            if(leaderID == NULL)
-               leaderID = tempID;
-            else if(*tempID < *leaderID)
-               leaderID = tempID;
+            if(degree == maxDegree && *tempID < leaderID)
+               leaderID = *tempID;
+            else if(degree > maxDegree)
+            {
+               maxDegree = degree;
+               leaderID = *tempID;
+            }
+         }
+         else if(degree > maxDegree)
+         {
+            maxDegree = degree;
+            leaderID = *tempID;
+            isLeaderInitialized = true;
          }
       }
-   return leaderID;
+   return std::make_pair(isLeaderInitialized, leaderID);
 }
 
 void
@@ -140,6 +150,7 @@ Clustering::initializeRoleList()
 void
 Clustering::makeCluster(uint32_t leaderID)
 {
+   std::cout << "mC::Leader ID: " << leaderID << std::endl;
    const Neighborhood* cluster;
    //sets role LEADER
    globalNodeTable.setRole(leaderID, Role::LEADER);

@@ -31,16 +31,37 @@ rolep_bag::begin()
 }
 
 rolep_bag::iterator
+rolep_bag::begin() const
+{
+   return bag.begin();
+}
+
+
+rolep_bag::iterator
 rolep_bag::max()
 {
    return --bag.end();
 }
 
 rolep_bag::iterator
+rolep_bag::max() const
+{
+   return --bag.end();
+}
+
+
+rolep_bag::iterator
 rolep_bag::end()
 {
    return bag.end();
 }
+
+rolep_bag::iterator
+rolep_bag::end() const
+{
+   return bag.end();
+}
+
 
 unsigned int
 rolep_bag::size()
@@ -61,7 +82,7 @@ rolep_bag::clear()
 }
 
 bool
-rolep_bag::empty()
+rolep_bag::empty() const
 {
    return bag.empty();
 }

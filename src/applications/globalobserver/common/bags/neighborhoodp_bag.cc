@@ -53,8 +53,22 @@ neighborhoodp_bag::max()
 {
    return --bag.end();
 }
+
+neighborhoodp_bag::iterator
+neighborhoodp_bag::max() const
+{
+   return --bag.end();
+}
+
+
 unsigned int
 neighborhoodp_bag::size()
+{
+   return bag.size();
+}
+
+unsigned int
+neighborhoodp_bag::size() const
 {
    return bag.size();
 }
@@ -66,7 +80,7 @@ neighborhoodp_bag::clear()
 }
 
 bool
-neighborhoodp_bag::empty()
+neighborhoodp_bag::empty() const
 {
    return bag.empty();
 }

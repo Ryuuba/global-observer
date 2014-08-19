@@ -61,7 +61,7 @@ uint32p_bag::clear()
 }
 
 bool
-uint32p_bag::empty()
+uint32p_bag::empty() const
 {
    return bag.empty();
 }

@@ -61,7 +61,7 @@ doublep_bag::clear()
 }
 
 bool
-doublep_bag::empty()
+doublep_bag::empty() const
 {
    return bag.empty();
 }

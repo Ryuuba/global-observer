@@ -61,7 +61,7 @@ coordp_bag::clear()
 }
 
 bool
-coordp_bag::empty()
+coordp_bag::empty() const
 {
    return bag.empty();
 }

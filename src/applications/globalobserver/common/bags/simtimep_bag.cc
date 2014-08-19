@@ -62,7 +62,7 @@ simtimep_bag::clear()
 }
 
 bool
-simtimep_bag::empty()
+simtimep_bag::empty() const
 {
    return bag.empty();
 }

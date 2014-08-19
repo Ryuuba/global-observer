@@ -43,7 +43,7 @@ uint8p_bag::end() const
 }
 
 unsigned int
-uint8p_bag::size()
+uint8p_bag::size() const
 {
    return bag.size();
 }
@@ -61,7 +61,7 @@ uint8p_bag::clear()
 }
 
 bool
-uint8p_bag::empty()
+uint8p_bag::empty() const
 {
    return bag.empty();
 }

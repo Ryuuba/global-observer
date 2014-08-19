@@ -218,7 +218,7 @@ Table::getSpeedListMin() const
    return speed;
 }
 
-const doublep_p*
+const double_p*
 Table::getSpeedListMax() const
 {
    const double_p* speed = NULL;
@@ -227,8 +227,8 @@ Table::getSpeedListMax() const
    return speed;
 }
 
-const doublep_p*
-Table::getFlightLenthListMin() const
+const double_p*
+Table::getFlightLengthListMin() const
 {
    const double_p* flightLength = NULL;
    if(!flight_length_list.empty())
@@ -236,7 +236,7 @@ Table::getFlightLenthListMin() const
    return flightLength;
 }
 
-const doublep_p*
+const double_p*
 Table::getFlightLengthListMax() const
 {
    const double_p* flightLength = NULL;
@@ -285,8 +285,9 @@ const neighborhood_p*
 Table::getOneHopNeighborhoodListMin() const
 {
    const neighborhood_p* oneHopNeighborhood = NULL;
-   if(!one_hop_list.empty())
-      oneHopNeighborhood = &(*one_hop_list.begin());
+   if(!one_hop_neighborhood_list.empty())
+      oneHopNeighborhood = 
+      &(*one_hop_neighborhood_list.begin());
    return  oneHopNeighborhood; 
 }
 
@@ -294,8 +295,9 @@ const neighborhood_p*
 Table::getOneHopNeighborhoodListMax() const
 {
    const neighborhood_p* oneHopNeighborhood = NULL;
-   if(!one_hop_list.empty())
-      oneHopNeighborhood = &(*one_hop_list.max());
+   if(!one_hop_neighborhood_list.empty())
+      oneHopNeighborhood =
+      &(*one_hop_neighborhood_list.max());
    return  oneHopNeighborhood; 
 }
 
@@ -303,8 +305,9 @@ const neighborhood_p*
 Table::getKHopNeighborhoodListMin() const
 {
    const neighborhood_p* kHopNeighborhood = NULL;
-   if(!k_hop_list.empty())
-      kHopNeighborhood = &(*k_hop_list.begin());
+   if(!k_hop_neighborhood_list.empty())
+      kHopNeighborhood =
+      &(*k_hop_neighborhood_list.begin());
    return  kHopNeighborhood; 
 }
 
@@ -312,8 +315,9 @@ const neighborhood_p*
 Table::getKHopNeighborhoodListMax() const
 {
    const neighborhood_p* kHopNeighborhood = NULL;
-   if(!k_hop_list.empty())
-      kHopNeighborhood = &(*k_hop_list.max());
+   if(!k_hop_neighborhood_list.empty())
+      kHopNeighborhood =
+      &(*k_hop_neighborhood_list.max());
    return  kHopNeighborhood; 
 }
 
@@ -344,7 +348,7 @@ Table::getCidListMin() const
    return cid;
 }
 
-uint32p_bag::iterator
+const uint32_p*
 Table::getCidListMax() const
 {
    const uint32_p* cid = NULL;
@@ -364,7 +368,7 @@ Table::accessPositionList() const
 }
 
 const doublep_bag*
-accessSpeedList() const
+Table::accessSpeedList() const
 {
    const doublep_bag* speedList = NULL;
    if(!speed_list.empty())
@@ -373,7 +377,7 @@ accessSpeedList() const
 }
 
 const doublep_bag*
-accessFlightLengthList() const
+Table::accessFlightLengthList() const
 {
    const doublep_bag* flightLengthList = NULL;
    if(!flight_length_list.empty())
@@ -382,7 +386,7 @@ accessFlightLengthList() const
 }
 
 const simtimep_bag*
-accessPauseTimeList() const
+Table::accessPauseTimeList() const
 {
    const simtimep_bag* pauseTimeList = NULL;
    if(!pause_time_list.empty())
@@ -391,7 +395,7 @@ accessPauseTimeList() const
 }
 
 const simtimep_bag*
-accessMotionTimeList() const
+Table::accessMotionTimeList() const
 {
    const simtimep_bag* motionTimeList = NULL;
    if(!motion_time_list.empty())
@@ -400,22 +404,22 @@ accessMotionTimeList() const
 }
 
 const neighborhoodp_bag*
-accessOneHopNeighborhoodList() const
+Table::accessOneHopNeighborhoodList() const
 {
    const neighborhoodp_bag* oneHopNeighborhoodList = NULL;
-   if(!one_hop_list.empty())
-      oneHopNeighborhood = &one_hop_list;
-   return oneHopNeighborhood;
+   if(!one_hop_neighborhood_list.empty())
+      oneHopNeighborhoodList = &one_hop_neighborhood_list;
+   return oneHopNeighborhoodList;
 }
 
 
 const neighborhoodp_bag*
-accessKHopNeighborhoodList() const
+Table::accessKHopNeighborhoodList() const
 {
    const neighborhoodp_bag* kHopNeighborhoodList = NULL;
-   if(!k_hop_list.empty())
-      kHopNeighborhood = &k_hop_list;
-   return kHopNeighborhood;
+   if(!k_hop_neighborhood_list.empty())
+      kHopNeighborhoodList = &k_hop_neighborhood_list;
+   return kHopNeighborhoodList;
 }
 
 const rolep_bag*

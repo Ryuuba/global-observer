@@ -21,12 +21,15 @@ class rolep_bag
       virtual iterator insert(uint32_t id, Role r);
       virtual iterator erase(iterator it);
       virtual iterator begin();
+      virtual iterator begin() const;
       virtual iterator max();
+      virtual iterator max() const;
       virtual iterator end();
+      virtual iterator end() const;
       virtual unsigned int count(role_p pair_t);
       virtual unsigned int size();
       virtual void clear();
-      virtual bool empty();
+      virtual bool empty() const;
 };
 
 std::ostream&

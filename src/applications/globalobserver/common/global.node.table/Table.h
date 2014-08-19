@@ -53,6 +53,7 @@ class Table
       virtual node_state getState(uint32_t id);
       //methods to get the value of the
       //begin and the end of each list
+      //TODO:return pairs instead of pointers
       virtual const coord_p* getPositionListMin() const;
       virtual const coord_p* getPositionListMax() const;
       virtual const double_p* getSpeedListMin() const;
@@ -81,9 +82,9 @@ class Table
               getRoleListMin() const;
       virtual const role_p*
               getRoleListMax() const;
-      virtual const uint32p*
+      virtual const uint32_p*
               getCidListMin() const;
-      virtual const uint32p*
+      virtual const uint32_p*
               getCidListMax() const;
       //methods to only-read the lists
       virtual const coordp_bag* accessPositionList() const;
@@ -100,7 +101,7 @@ class Table
               accessKHopNeighborhoodList() const;
       virtual const rolep_bag*
               accessRoleList() const;
-      virtual const uint32_t*
+      virtual const uint32p_bag*
               accessCidList() const;
       //methods to access and to manage the table
       virtual unsigned int size() const;
