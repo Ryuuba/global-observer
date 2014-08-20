@@ -74,9 +74,6 @@ public IGlobalObserver{
       //Creates k-hop clusters around leaders
       virtual void makeCluster(uint32_t leaderID);
 
-      //Unclusters the neighborhood of a leader
-      virtual void getRidOf(uint32_t leaderID);
-
       //Initialized the role list getting the UID of each
       //node in table, then it inserts to each node the
       //UNCLUSTERED role. Besides, it changes the value
@@ -94,9 +91,8 @@ public IGlobalObserver{
       //leader neighbors
       virtual void organizeLeaders();
 
-      virtual void
-      insertInvalidLeader
-      (uint32_t i, std::set<uint32_t>& s);
+      //Unclusters the neighborhood of a leader
+      virtual void getRidOf(uint32_t leaderID);
 
       //Changes clustered nodes to UNCLUSTERED when they do
       //not have leaders in their neighborhoods
