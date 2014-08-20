@@ -523,3 +523,12 @@ Table::info()
    }
    return buffer;
 }
+
+std::string
+Table::info(uint32_t  id)
+{
+   std::string temp;
+   if(table.find(id) != table.end())
+      temp = table[id].info();
+   return temp;
+}

@@ -87,6 +87,25 @@ rolep_bag::empty() const
    return bag.empty();
 }
 
+//Search for nodes with role LEADER. Note that the key 0 is
+//not used in the search.
+std::pair<rolep_bag::iterator,rolep_bag::iterator>
+rolep_bag::equalRange(Role r)
+{
+   role_p leader;
+   leader.set(0,r);
+   return bag.equal_range(leader);
+}
+
+std::pair<rolep_bag::iterator,rolep_bag::iterator>
+rolep_bag::equalRange(Role r) const
+{
+   role_p leader;
+   leader.set(0, r);
+   return bag.equal_range(leader);
+}
+
+
 std::ostream&
 operator << (std::ostream& os, rolep_bag& bag)
 {

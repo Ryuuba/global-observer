@@ -66,24 +66,151 @@ void
 Clustering::updateTable()
 {
    computeNeighborhood();
+   if(!isRoleListInitialized)
+   {
+      initializeRoleList();
+         if(ev.isGUI())
+            changeIconColor();
+   }
+   else
+   {
+      organizeClusters();
+         if(ev.isGUI())
+            changeIconColor();
+   }
    makeClusters();
-   ev << globalNodeTable.info();
+   if(ev.isGUI())
+      changeIconColor();
+
+   //for(auto pair : globalNodeTable)
+     // ev << globalNodeTable.info(pair.first) << endl;
+}
+
+void
+Clustering::organizeClusters()
+{
+   organizeLeaders();
+   organizeClusteredNodes();
+}
+
+void
+Clustering::organizeLeaders()
+{
+   const rolep_bag* roleList = 
+         globalNodeTable.accessRoleList();
+   uint32_t leaderID;
+   bool isLeaderInvalid = false;
+   const Neighborhood* leaderNeighborhood;
+   std::set<uint32_t> invalidLeaders;
+   std::set<uint32_t> validLeaders;
+   auto leaderRange = roleList->equalRange(Role::LEADER);
+   for(auto it = leaderRange.first;
+            it != leaderRange.second;
+            it ++ )
+   {
+      leaderID = it->key();
+      leaderNeighborhood =
+      globalNodeTable.getState(leaderID).getKHop();
+      ev << "Leader ID: " << leaderID << ' '
+         << "Neighborhood: " << leaderNeighborhood->info()
+         << endl;
+      if(leaderNeighborhood->size() == 0)
+         insertInvalidLeader(leaderID, invalidLeaders);
+      else
+      {
+         for(auto& id: *leaderNeighborhood)
+         {
+            auto neighborRole =
+            *globalNodeTable.getState(id).getRole();
+            if(neighborRole == Role::LEADER)
+            {
+               insertInvalidLeader(id, invalidLeaders);
+               isLeaderInvalid = true;
+            }
+         }
+         if(isLeaderInvalid)
+         {
+            insertInvalidLeader(leaderID, invalidLeaders);
+            isLeaderInvalid = false;
+         }
+         else
+            validLeaders.insert(leaderID);
+      }
+   }
+   if(!invalidLeaders.empty())
+      for(auto& id : invalidLeaders)
+         getRidOf(id);
+   if(!validLeaders.empty())
+      for(auto& id : validLeaders)
+         makeCluster(id);
+}
+
+void
+Clustering::
+insertInvalidLeader(uint32_t i, std::set<uint32_t>& s)
+{
+   if(!s.empty())
+   {
+      if(s.find(i) != s.end())
+         s.insert(i);
+   }
+   else
+      s.insert(i);
+   ev << "INVALID LEADER: " << i << endl;
+}
+
+void
+Clustering::organizeClusteredNodes()
+{
+   const rolep_bag* roleList =
+         globalNodeTable.accessRoleList();
+   uint32_t nodeID, leaderID;
+   std::set<uint32_t> invalidClusteredNodes;
+   const Neighborhood* clusteredNodeNeighborhood;
+   auto clusteredRange =
+   roleList->equalRange(Role::CLUSTERED);
+   auto leaderRange =
+   roleList->equalRange(Role::LEADER);
+   bool isClusteredNodeValid = false;
+   for(auto it_i = clusteredRange.first;
+            it_i != clusteredRange.second;
+            it_i ++)
+   {
+      nodeID = it_i->key();
+      clusteredNodeNeighborhood = 
+      globalNodeTable.getState(nodeID).getKHop();
+      for(auto it_j = leaderRange.first;
+               it_j != leaderRange.second;
+               it_j ++)
+      {
+         leaderID = it_j->key();
+         if(clusteredNodeNeighborhood->find(leaderID) !=
+            clusteredNodeNeighborhood->end())
+         {
+            isClusteredNodeValid = true;
+            break;
+         }
+      }
+      if(isClusteredNodeValid)
+         isClusteredNodeValid = false;
+      else
+         invalidClusteredNodes.insert(nodeID);
+   }
+   if(!invalidClusteredNodes.empty())
+      for(auto& id : invalidClusteredNodes)
+         globalNodeTable.setRole(id, Role::UNCLUSTERED);
 }
 
 void
 Clustering::makeClusters()
 {
    std::pair<bool,uint32_t> leader;
-   if(!isRoleListInitialized)
-      initializeRoleList();
    do
    {
       leader = getLeader();
       if(leader.first)
          makeCluster(leader.second);
    }while(leader.first);
-   if(ev.isGUI())
-      changeIconColor();
 }
 
 std::pair<bool,uint32_t>
@@ -112,8 +239,6 @@ Clustering::getLeaderByDegree()
                   getOneHop()->size();
          tempID = globalNodeTable.getState(pair.key()).
                   getUID();
-         std::cout << (int)degree << ", "
-                   << *tempID << std::endl;
          if(isLeaderInitialized)
          {
             if(degree == maxDegree && *tempID < leaderID)
@@ -150,7 +275,6 @@ Clustering::initializeRoleList()
 void
 Clustering::makeCluster(uint32_t leaderID)
 {
-   std::cout << "mC::Leader ID: " << leaderID << std::endl;
    const Neighborhood* cluster;
    //sets role LEADER
    globalNodeTable.setRole(leaderID, Role::LEADER);
@@ -170,6 +294,30 @@ Clustering::makeCluster(uint32_t leaderID)
          globalNodeTable.setRole(neighbor,Role::CLUSTERED);
          //sets to neighbor a CID equals the leader ID
          globalNodeTable.setCid(neighbor, leaderID);
+      }
+}
+
+void
+Clustering::getRidOf(uint32_t leaderID)
+{
+   const Neighborhood* cluster;
+   globalNodeTable.setCid(leaderID, 0);
+   globalNodeTable.setRole(leaderID, Role::UNCLUSTERED);
+   //gets the k-hop neighborhood of the ex-leader
+   cluster = globalNodeTable.
+             getState(leaderID).getKHop();
+   //unclusters all nodes that belongs to the k-hop
+   //neighborhood of the ex-leader. neighbor is the UID of
+   //each node in the k-hop neighborhood of the ex-leader
+   for(auto& neighbor : *cluster)
+      if(*globalNodeTable.getState(neighbor).getCid() == 
+         leaderID)
+      {
+         //sets to neighbor the role CLUSTERED
+         globalNodeTable.
+         setRole(neighbor,Role::UNCLUSTERED);
+         //neighbor CID equals the leader ID
+         globalNodeTable.setCid(neighbor, 0);
       }
 }
 
@@ -195,7 +343,13 @@ Clustering::changeIconColor()
             parse("i=device/pocketpc_s,blue");
          else if (*role == Role::CLUSTERED)
             displayStr.
-            parse("i=device/pocketpc_s,gold");
+            parse("i=device/pocketpc_s,yellow");
+         else if (*role == Role::GATEWAY)
+            displayStr.
+            parse("i=device/pocketpc_s,green");
+         else
+            displayStr.
+            parse("i=device/pocketpc_s");
       }
    }
 }

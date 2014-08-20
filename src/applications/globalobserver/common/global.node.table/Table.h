@@ -110,5 +110,6 @@ class Table
       virtual iterator begin();
       virtual iterator end();
       virtual std::string info();
+      virtual std::string info(uint32_t id);
 };
 #endif

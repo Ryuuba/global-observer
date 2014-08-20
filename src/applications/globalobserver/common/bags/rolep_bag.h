@@ -30,6 +30,13 @@ class rolep_bag
       virtual unsigned int size();
       virtual void clear();
       virtual bool empty() const;
+      //Returns the bounds of a range including all
+      //elements with role r
+      virtual std::pair<iterator,iterator>
+              equalRange(Role r);
+      virtual std::pair<iterator,iterator>
+              equalRange(Role r) const;
+
 };
 
 std::ostream&

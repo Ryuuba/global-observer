@@ -56,7 +56,9 @@ public IGlobalObserver{
       virtual Neighborhood
          computeNeighborhood(uint32_t nodeID, uint8_t k);
       
-      //Computes clusters in a centralized manner
+      //Computes clusters in a centralized manner. It takes
+      //all nodes whose role is UNCLUSTERED and form with
+      //them clusters
       virtual void makeClusters();
       
       //Computes the leader according the value of
@@ -72,13 +74,37 @@ public IGlobalObserver{
       //Creates k-hop clusters around leaders
       virtual void makeCluster(uint32_t leaderID);
 
+      //Unclusters the neighborhood of a leader
+      virtual void getRidOf(uint32_t leaderID);
+
       //Initialized the role list getting the UID of each
       //node in table, then it inserts to each node the
       //UNCLUSTERED role. Besides, it changes the value
       //of isRoleListInitialized to true
       virtual void initializeRoleList();
       
-      //Colors leaders in red and clustered nodes in gold
+      //Organizes clusters as follows: First, it checks if
+      //there are leaders in the neighborhood of each
+      //leader. If it happens, the neighborhoods of each
+      //leader are unclustered. Otherwise, clusters are
+      //formed around each leader
+      virtual void organizeClusters();
+
+      //Forms clusters around leaders when they do not have
+      //leader neighbors
+      virtual void organizeLeaders();
+
+      virtual void
+      insertInvalidLeader
+      (uint32_t i, std::set<uint32_t>& s);
+
+      //Changes clustered nodes to UNCLUSTERED when they do
+      //not have leaders in their neighborhoods
+      virtual void organizeClusteredNodes();
+
+
+      //Colorizes a cluster. Cluster heads have a blue-icon
+      //whereas clustered nodes have a gold-icon
       virtual void changeIconColor();
             
       

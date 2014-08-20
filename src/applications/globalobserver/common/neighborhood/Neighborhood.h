@@ -23,12 +23,14 @@ class Neighborhood
       virtual unsigned int size();
       virtual unsigned int size() const;
       virtual void clear();
+      virtual iterator find(uint32_t id);
+      virtual iterator find(uint32_t id) const;
       virtual Neighborhood operator+
       (const Neighborhood& n) const;
       virtual void operator+= (const Neighborhood& n);
       virtual bool operator== (const Neighborhood& n) const;
       virtual bool operator!= (const Neighborhood& n) const;
-      virtual std::string info();
+      virtual std::string info() const;
 };
 
 inline std::ostream&

@@ -58,6 +58,18 @@ Neighborhood::clear()
    vicinity.clear();
 }
 
+Neighborhood::iterator
+Neighborhood::find(uint32_t id)
+{ 
+   return vicinity.find(id);
+}
+
+Neighborhood::iterator
+Neighborhood::find(uint32_t id) const
+{ 
+   return vicinity.find(id);
+}
+
 Neighborhood
 Neighborhood::operator + (const Neighborhood& n) const
 {
@@ -90,7 +102,7 @@ Neighborhood::operator != (const Neighborhood& n) const
 }
 
 std::string
-Neighborhood::info()
+Neighborhood::info() const
 {
    std::string buffer;
    if(!vicinity.empty())
