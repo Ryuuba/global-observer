@@ -85,12 +85,12 @@ Clustering::updateTable()
 void
 Clustering::organizeClusters()
 {
+   organizeClusteredNodes();
+   if(ev.isGUI())
+      changeIconColor();
    organizeLeaders();
    if(ev.isGUI())
       changeIconColor();
-   organizeClusteredNodes();
-   if(ev.isGUI())
-         changeIconColor();
 }
 
 void
@@ -109,11 +109,20 @@ organizeLeaders()
    auto leaderRange = roleList->equalRange(Role::LEADER);
    auto it = leaderRange.first;
    bool isLeaderInvalid = false;
+   ev << "computing invalid leaders . . ." << endl;
+   ev << "list of leaders: ";
+   for(auto it_i = leaderRange.first;
+            it_i!=leaderRange.second; it_i++)
+      ev << it_i->key() << ' ';
+   ev << endl;
    do
    {
       leaderID = it->key();
       leaderNeighborhood =
       globalNodeTable.getState(leaderID).getKHop();
+      ev << "Leader ID: " << leaderID << ' '
+         << (int)hops << "-hop neighborhood: "
+         << leaderNeighborhood->info() << endl;
       if(leaderNeighborhood->size() == 0)
       {
          if(invalid->empty())
@@ -141,7 +150,7 @@ organizeLeaders()
       {
          if(invalid->empty())
             invalid->insert(leaderID);
-         else if(invalid->find(leaderID) != 
+         else if(invalid->find(leaderID) == 
                  invalid->end())
             invalid->insert(leaderID);
          isLeaderInvalid = false;
@@ -150,7 +159,7 @@ organizeLeaders()
       {
          if(valid->empty())
             valid->insert(leaderID);
-         else if(valid->find(leaderID) != 
+         else if(valid->find(leaderID) == 
                  valid->end())
             valid->insert(leaderID);
       }
@@ -186,56 +195,35 @@ Clustering::organizeClusteredNodes()
    std::set<uint32_t> invalidClusteredNodes;
    auto clusteredNodeRange =
    roleList->equalRange(Role::CLUSTERED);
-   auto leaderRange =
-   roleList->equalRange(Role::LEADER);
    bool isRoleValid = false;
-   ev << "Clustered nodes:" << endl;
-   for(auto it =  clusteredNodeRange.first;
-            it != clusteredNodeRange.second;
-            it ++)
-      ev << "ID: " << it->key() << ' '
-         << "Role: " << it->value() << endl;
-   ev << "Leaders:" << endl;
-   for(auto it = leaderRange.first;
-            it != leaderRange.second;
-            it ++)
-      ev << "ID: " << it->key() << ' '
-         << "Role: " << it->value() << endl;
-   ev << "Finding invalid clustered nodes" << endl;
    for(auto it =  clusteredNodeRange.first;
             it != clusteredNodeRange.second;
             it ++)
    {
       clusteredNodeID = it->key();
-      const Neighborhood* vicinity =
+      const Neighborhood* myKVicinity =
       globalNodeTable.getState(clusteredNodeID).
       getKHop();
-      ev << "Clustered node ID: " << clusteredNodeID << ' '
-         << "Neighborhood: " << vicinity->info()
-         << endl;
-      for(auto& neighbor : *vicinity)
+      const uint32* myleader =
+      globalNodeTable.getState(clusteredNodeID).getCid();
+      for(auto& neighborID : *myKVicinity)
       {
-         const Role* neighborRole =
-         globalNodeTable.getState(neighbor).getRole();
-         if(*neighborRole == Role::LEADER)
+         if(neighborID == *myleader)
          {
-            ev << "Valid clustered node: "
-               << clusteredNodeID << endl;
             isRoleValid = true;
             break;
          }
       }
       if(!isRoleValid)
-      {
-         ev << "Invalid clustered node: "
-            << clusteredNodeID << endl;
          invalidClusteredNodes.insert(clusteredNodeID);
-      }
       else
          isRoleValid = false;
    }
    for(auto& id : invalidClusteredNodes)
+   {
       globalNodeTable.setRole(id, Role::UNCLUSTERED);
+      globalNodeTable.setCid(id,0);
+   }
 }
 
 void
@@ -430,7 +418,7 @@ Clustering::computeNeighborhood(uint32_t nodeID)
       if
       (
          nodeID != *neighborID &&
-         mypos->distance(*neighbor_pos) < range
+         mypos->distance(*neighbor_pos) <= range
       )
          n.insert(*neighborID);
    }
@@ -441,12 +429,13 @@ Clustering::computeNeighborhood(uint32_t nodeID)
 Neighborhood
 Clustering::computeNeighborhood(uint32_t nodeID, uint8_t k)
 {
-   Neighborhood n;
+   Neighborhood oneHop, kHop;
    //get the neighborhood of the node with ID = nodeID
-   n = *globalNodeTable.getState(nodeID).getOneHop();
+   oneHop = *globalNodeTable.getState(nodeID).getOneHop();
+   kHop = oneHop;
    if(k>1)
-      for(auto& neighbor : n)//for each neighbor in n
-         n += computeNeighborhood(neighbor, k-1);
-   n.erase(nodeID);
-   return n;
+      for(auto& neighbor : oneHop)//for each neighbor in n
+         kHop += computeNeighborhood(neighbor, k-1);
+   kHop.erase(nodeID);
+   return kHop;
 }
