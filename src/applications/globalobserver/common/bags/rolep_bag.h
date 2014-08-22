@@ -27,6 +27,7 @@ class rolep_bag
       virtual iterator end();
       virtual iterator end() const;
       virtual unsigned int count(role_p pair_t);
+      virtual unsigned int count(Role r) const;
       virtual unsigned int size();
       virtual void clear();
       virtual bool empty() const;

@@ -75,6 +75,19 @@ rolep_bag::count(role_p pair_t)
    return bag.count(pair_t);
 }
 
+//bag elements are ordered according to their value: the
+//second element in a role_p pair, it means this method
+//returns the number of elements with certain role "r" in
+//the bag
+
+unsigned int
+rolep_bag::count(Role r) const
+{
+   role_p role;
+   role.set(0,r);
+   return bag.count(role);
+}
+
 void
 rolep_bag::clear()
 {

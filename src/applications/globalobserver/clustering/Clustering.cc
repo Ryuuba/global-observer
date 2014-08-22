@@ -24,6 +24,8 @@ Clustering::initialize()
    criterion = par("criterion").stringValue();
    update = new cMessage;
    scheduleAt(simTime()+updateDelay, update);
+   numberOfLeaders = registerSignal("leaders");
+   leadershipTime = registerSignal("leaderOff");
 }
 
 void
@@ -33,16 +35,54 @@ Clustering::handleMessage(cMessage* msg)
    {
       if(receivedMessages == 0)
       {
+         for(auto& pair : leaderTable)
+         {
+            if(pair.second.second == 0.0)
+            {
+               simtime_t leadershipPeriod =
+               simTime() - pair.second.first;
+               emit(leadershipTime, leadershipPeriod);
+            }
+         }
+         std::cout << "leader table content:" 
+                   << std::endl
+                   << leaderTable.info() << std::endl;
          delete msg;
          endSimulation();
       }
       else
          receivedMessages = 0;
       updateTable();
+      emitStatistics();
       scheduleAt(simTime()+1, msg);
    }
    else
       updateTable(msg);
+}
+
+void
+Clustering::emitStatistics()
+{
+   auto roleList = globalNodeTable.accessRoleList();
+   uint8_t leaderSetSize = roleList->count(Role::LEADER);
+   std::list<uint32_t> leadersToBeErased;
+   emit(numberOfLeaders, leaderSetSize);
+   for(auto& pair : leaderTable)
+   {
+      simtime_t leadershipPeriod =
+      pair.second.second - pair.second.first;
+      if(leadershipPeriod < 0)
+         continue;
+      else
+      {
+         emit(leadershipTime,leadershipPeriod);
+         leadersToBeErased.push_back(pair.first);
+      }
+   }
+   for(auto& id : leadersToBeErased)
+      leaderTable.erase(id);
+   ev << "leader table content:" << '\n'
+      << leaderTable.info() << endl;
 }
 
 void
@@ -305,6 +345,10 @@ Clustering::makeCluster(uint32_t leaderID)
    globalNodeTable.setRole(leaderID, Role::LEADER);
    //sets cid using the CID leader ID
    globalNodeTable.setCid(leaderID, leaderID);
+   //store the leader in the leaderTable. The insertion
+   //is only performed when the leader ID is not in the
+   //leaderTable
+   leaderTable.setStartTime(leaderID,simTime());
    //gets the k-hop neighborhood of the leader
    cluster = globalNodeTable.
              getState(leaderID).getKHop();
@@ -344,6 +388,7 @@ Clustering::getRidOf(uint32_t leaderID)
          //neighbor CID equals the leader ID
          globalNodeTable.setCid(neighbor, 0);
       }
+   leaderTable.setEndTime(leaderID,simTime());
 }
 
 void

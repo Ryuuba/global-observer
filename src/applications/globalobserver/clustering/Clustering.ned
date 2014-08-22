@@ -15,17 +15,20 @@ simple Clustering
 {
    parameters:
       @display("i=block/cogwheel_l");
-      //string leaderElectionCriterion; //criterion to elect leader
+      //criterion to elect leader
+      //string leaderElectionCriterion; 
       int hops; //cluster radious measured in hops
-      int range @unit(m); // coberture range of mobile hosts
+      int range @unit(m); //coberture range of mobile hosts
+      //central organization delay
       double updateDelay = default(0.1s) @unit(s);
-      string tableName = default("globalNodeTable");
+      //leader election criterion
       string criterion = default("degree");
+
       //statistics
-      //@signal[leaderChange](type = "long");
-      //@statistic[leaderNumber](title = "number of leader";source ="arrival";record = stats, vector);
-      //@signal[leaderOff](type = "simtime_t");
-      //@statistic[leadershipTime](title = "leadership time";source = "leadership";record = stats, vector);
+      @signal[leaders](type = "long");
+      @statistic[numberOfLeaders](title = "number of leaders";source ="leaders";record = stats, vector);
+      @signal[leaderOff](type = "simtime_t");
+      @statistic[leadershipTime](title = "leadership time";source = "leaderOff";record = stats, vector);
    gates:
       input fromGlobalClustering;
 }

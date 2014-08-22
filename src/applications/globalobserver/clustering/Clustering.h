@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include "Table.h"
+#include "LeaderTable.h"
 #include "notification_m.h"
 #include "IGlobalObserver.h"
 
@@ -25,7 +26,11 @@ public IGlobalObserver{
       Table globalNodeTable;
       //Flag indicating if role list is initialized
       bool isRoleListInitialized;
-      
+      //Signals to record statistics
+      simsignal_t numberOfLeaders;
+      simsignal_t leadershipTime;
+      //Datastructure to store the leadership-time
+      LeaderTable leaderTable;
    protected:
       //It initializes the protected attributes with the
       //omnetpp.ini-file data 
@@ -103,7 +108,10 @@ public IGlobalObserver{
       //whereas clustered nodes have a gold-icon
       virtual void changeIconColor();
             
-      
+      //emits the statistics of the leadershipTime and the
+      //number of leaders
+      virtual void emitStatistics();
+
    public:
       Clustering();
       ~Clustering();

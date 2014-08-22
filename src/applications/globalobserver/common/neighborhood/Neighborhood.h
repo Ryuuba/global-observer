@@ -28,8 +28,10 @@ class Neighborhood
       virtual Neighborhood operator+
       (const Neighborhood& n) const;
       virtual void operator+= (const Neighborhood& n);
-      virtual bool operator== (const Neighborhood& n) const;
-      virtual bool operator!= (const Neighborhood& n) const;
+      virtual bool operator==
+      (const Neighborhood& n) const;
+      virtual bool operator!=
+      (const Neighborhood& n) const;
       virtual std::string info() const;
 };
 

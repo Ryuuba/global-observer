@@ -20,12 +20,12 @@ class role_p
       virtual Role value() const;
       virtual const Role* value_p() const;
       virtual void value(Role v);
-      virtual bool operator < (const role_p& pair_t) const;
-      virtual bool operator <= (const role_p& pair_t) const;
-      virtual bool operator > (const role_p& pair_t) const;
-      virtual bool operator >= (const role_p& pair_t) const;
-      virtual bool operator == (const role_p& pair_t) const;
-      virtual bool operator != (const role_p& pair_t) const;
+      virtual bool operator <(const role_p& pair_t) const;
+      virtual bool operator <=(const role_p& pair_t) const;
+      virtual bool operator >(const role_p& pair_t) const;
+      virtual bool operator >=(const role_p& pair_t) const;
+      virtual bool operator ==(const role_p& pair_t) const;
+      virtual bool operator !=(const role_p& pair_t) const;
    protected:
       std::pair<uint32_t,Role> pair;
 };
