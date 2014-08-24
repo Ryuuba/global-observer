@@ -54,12 +54,12 @@ public IGlobalObserver{
       //Computes the one-hop neighborhood of a node using
       //the coberture range as parameter.
       virtual Neighborhood
-         computeNeighborhood(uint32_t nodeID);
+      computeNeighborhood(uint32_t nodeID);
 
       //Computes the neighborhood of a node using
       //the number of k-hops as parameter.
       virtual Neighborhood
-         computeNeighborhood(uint32_t nodeID, uint8_t k);
+      computeNeighborhood(uint32_t nodeID, uint8_t k);
       
       //Computes clusters in a centralized manner. It takes
       //all nodes whose role is UNCLUSTERED and form with
@@ -75,6 +75,11 @@ public IGlobalObserver{
       //Returns a NULL pointer when there aren't 
       //UNCLUSTERED nodes
       virtual std::pair<bool,uint32_t> getLeaderByDegree();
+
+      //Computes leaders according the size of their k-hop
+      //neighborhood
+      virtual std::pair<bool,uint32_t>
+      getLeaderByKHopNeighborhood();
       
       //Creates k-hop clusters around leaders
       virtual void makeCluster(uint32_t leaderID);

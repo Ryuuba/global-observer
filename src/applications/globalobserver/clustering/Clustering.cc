@@ -236,6 +236,7 @@ Clustering::organizeClusteredNodes()
    auto clusteredNodeRange =
    roleList->equalRange(Role::CLUSTERED);
    bool isRoleValid = false;
+ 
    for(auto it =  clusteredNodeRange.first;
             it != clusteredNodeRange.second;
             it ++)
@@ -276,65 +277,6 @@ Clustering::makeClusters()
       if(leader.first)
          makeCluster(leader.second);
    }while(leader.first);
-}
-
-std::pair<bool,uint32_t>
-Clustering::getLeader()
-{
-   std::pair<bool,uint32_t> leader;
-   if(criterion == "degree")
-      leader = getLeaderByDegree();
-   return leader;
-}
-
-//TODO: The UID must be considered to break ties
-std::pair<bool,uint32_t>
-Clustering::getLeaderByDegree()
-{
-   uint32_t leaderID;
-   bool isLeaderInitialized = false;
-   const uint32_t* tempID = NULL;
-   uint8_t maxDegree = 0, degree;
-   const rolep_bag* roleList =
-         globalNodeTable.accessRoleList();
-   for(auto& pair : *roleList)
-      if(pair.value() == Role::UNCLUSTERED)
-      {
-         degree = globalNodeTable.getState(pair.key()).
-                  getOneHop()->size();
-         tempID = globalNodeTable.getState(pair.key()).
-                  getUID();
-         if(isLeaderInitialized)
-         {
-            if(degree == maxDegree && *tempID < leaderID)
-               leaderID = *tempID;
-            else if(degree > maxDegree)
-            {
-               maxDegree = degree;
-               leaderID = *tempID;
-            }
-         }
-         else if(degree > maxDegree)
-         {
-            maxDegree = degree;
-            leaderID = *tempID;
-            isLeaderInitialized = true;
-         }
-      }
-   return std::make_pair(isLeaderInitialized, leaderID);
-}
-
-void
-Clustering::initializeRoleList()
-{
-   const uint32_t* uid;
-   for(auto& pair : globalNodeTable)
-   {
-      uid = pair.second.getUID();
-      if(uid)
-         globalNodeTable.setRole(*uid, Role::UNCLUSTERED);
-   }
-   isRoleListInitialized = true;
 }
 
 void
@@ -389,6 +331,103 @@ Clustering::getRidOf(uint32_t leaderID)
          globalNodeTable.setCid(neighbor, 0);
       }
    leaderTable.setEndTime(leaderID,simTime());
+}
+
+std::pair<bool,uint32_t>
+Clustering::getLeader()
+{
+   std::pair<bool,uint32_t> leader;
+   if(criterion == "degree")
+      leader = getLeaderByDegree();
+   else if(criterion == "k-hop")
+      leader = getLeaderByKHopNeighborhood();
+   return leader;
+}
+
+std::pair<bool,uint32_t>
+Clustering::getLeaderByDegree()
+{
+   uint32_t leaderID;
+   bool isLeaderInitialized = false;
+   const uint32_t* tempID = NULL;
+   uint8_t maxDegree = 0, degree;
+   const rolep_bag* roleList =
+         globalNodeTable.accessRoleList();
+   for(auto& pair : *roleList)
+      if(pair.value() == Role::UNCLUSTERED)
+      {
+         degree = globalNodeTable.getState(pair.key()).
+                  getOneHop()->size();
+         tempID = globalNodeTable.getState(pair.key()).
+                  getUID();
+         if(isLeaderInitialized)
+         {
+            if(degree == maxDegree && *tempID < leaderID)
+               leaderID = *tempID;
+            else if(degree > maxDegree)
+            {
+               maxDegree = degree;
+               leaderID = *tempID;
+            }
+         }
+         else if(degree > maxDegree)
+         {
+            maxDegree = degree;
+            leaderID = *tempID;
+            isLeaderInitialized = true;
+         }
+      }
+   return std::make_pair(isLeaderInitialized, leaderID);
+}
+
+std::pair<bool,uint32_t>
+Clustering::getLeaderByKHopNeighborhood()
+{
+   uint32_t leaderID;
+   bool isLeaderInitialized = false;
+   const uint32_t* tempID = NULL;
+   uint8_t kHopMax = 0, kHopSize;
+   const rolep_bag* roleList = 
+   globalNodeTable.accessRoleList();
+
+   for(auto& pair : *roleList)
+      if(pair.value() == Role::UNCLUSTERED)
+      {
+         kHopSize = globalNodeTable.getState(pair.key()).
+                     getKHop()->size();
+         tempID = globalNodeTable.getState(pair.key()).
+                  getUID();
+         if(isLeaderInitialized)
+         {
+            if(kHopSize == kHopMax && *tempID < leaderID)
+               leaderID = *tempID;
+            else if(kHopSize > kHopMax)
+            {
+               kHopMax = kHopSize;
+               leaderID = *tempID;
+            }
+         }
+         else if(kHopSize > kHopMax)
+         {
+            kHopMax = kHopSize;
+            leaderID = *tempID;
+            isLeaderInitialized = true;
+         }
+      }
+   return std::make_pair(isLeaderInitialized, leaderID);
+}
+
+void
+Clustering::initializeRoleList()
+{
+   const uint32_t* uid;
+   for(auto& pair : globalNodeTable)
+   {
+      uid = pair.second.getUID();
+      if(uid)
+         globalNodeTable.setRole(*uid, Role::UNCLUSTERED);
+   }
+   isRoleListInitialized = true;
 }
 
 void
@@ -470,6 +509,10 @@ Clustering::computeNeighborhood(uint32_t nodeID)
    return n;
 }
 
+//TODO: Modify neighborhood to store pairs that inform
+//hops <neighbor, hops>. This information allows connect
+//nodes with the most nearest leader
+
 //k is the number of hops
 Neighborhood
 Clustering::computeNeighborhood(uint32_t nodeID, uint8_t k)
@@ -478,7 +521,7 @@ Clustering::computeNeighborhood(uint32_t nodeID, uint8_t k)
    //get the neighborhood of the node with ID = nodeID
    oneHop = *globalNodeTable.getState(nodeID).getOneHop();
    kHop = oneHop;
-   if(k>1)
+   if(k > 1)
       for(auto& neighbor : oneHop)//for each neighbor in n
          kHop += computeNeighborhood(neighbor, k-1);
    kHop.erase(nodeID);

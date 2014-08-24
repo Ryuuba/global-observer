@@ -8,6 +8,7 @@
 #include "rolep_bag.h"
 #include "simtimep_bag.h"
 #include "uint32p_bag.h"
+#include "uint8p_bag.h"
 
 class node_state
 {
@@ -44,6 +45,8 @@ class node_state
       bool isRoleSet;
       uint32p_bag::iterator cid;
       bool isCidSet;
+      uint8p_bag::iterator leader_hop;
+      bool isLeaderHopSet;
    public:
       node_state();
       virtual ~node_state();
@@ -66,7 +69,8 @@ class node_state
       //virtual unsigned int* getKHopSize();
       virtual const Role* getRole() const;
       virtual const uint32_t* getCid() const;
-      /************** Getter iterator methods *************/
+      virtual const uint8_t* getHopsToTheLeader() const;
+      /************** Getter iterator methods ************/
       //They return pair of kind <bool, bag it>. The bool
       //value indicates if the iterator is valid or not.
       //Returning-a-pair strategy is used because iterators
@@ -89,8 +93,9 @@ class node_state
               getRoleIterator();
       virtual std::pair<bool,uint32p_bag::iterator>
               getCidIterator();
-
-      /****************** Setter methods ******************/
+      virtual std::pair<bool,uint8p_bag::iterator>
+              getHopsToTheLeaderIterator();
+      /****************** Setter methods *****************/
       //This methods receive iterator from bags as formal
       //arguments
       virtual void setUID(uint32_t id);
@@ -107,7 +112,8 @@ class node_state
               setKHop(neighborhoodp_bag::iterator it);
       virtual void setRole(rolep_bag::iterator it);
       virtual void setCid(uint32p_bag::iterator it);
-
+      virtual void
+              setHopsToTheLeader(uint8p_bag::iterator it);
       //This method prints the node-state content
       virtual std::string info();
 };

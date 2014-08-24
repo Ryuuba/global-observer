@@ -12,6 +12,7 @@ node_state::node_state()
     isOneHopSet = false;
     isKHopSet = false;
     isRoleSet = false;
+    isLeaderHopSet = false;
 }
 
 node_state::~node_state(){}
@@ -328,13 +329,46 @@ node_state::getCidIterator()
    return std::make_pair(isCidSet,cid);
 }
 
-//It sets the CID iterator of a node. Besides, it turns on
-//the flag indicating the iterator is valid
+//It sets the cid iterator of a node.
+//Besides, it turns on the flag indicating the iterator
+//is valid
 void
 node_state::setCid(uint32p_bag::iterator it)
 {
    cid = it;
    isCidSet = true;
+}
+
+//It returns a pointer to the distance to the leader
+//measured in hops. When the leader_hop iterator is 
+//invalid, the method returns a NULL pointer
+const uint8_t*
+node_state::getHopsToTheLeader() const
+{
+   const uint8_t* temp_hops = NULL;
+   if(isLeaderHopSet)
+      temp_hops = leader_hop->value_p();
+   return temp_hops;
+}
+
+//It returns, into a pair structure, a bool value and an
+//iterator pointing to the distance to the leader measured 
+//in hops of a node. The bool value informs if the
+//iterator is valid.
+std::pair<bool,uint8p_bag::iterator>
+node_state::getHopsToTheLeaderIterator()
+{
+   return std::make_pair(isLeaderHopSet, leader_hop);
+}
+
+//It sets the hops-to-the-leader iterator of a node.
+//Besides, it turns on the flag indicating the iterator
+//is valid
+void
+node_state::setHopsToTheLeader(uint8p_bag::iterator it)
+{
+   leader_hop = it;
+   isLeaderHopSet = true;
 }
 
 std::string
@@ -417,6 +451,12 @@ node_state::info()
          buffer += "GATEWAY";
       else
          buffer += "LEADER";
+      buffer += '\n';
+   }
+   if(isLeaderHopSet)
+   {
+      buffer += "Hops to the leader: ";
+      buffer += std::to_string((int)leader_hop->value());
       buffer += '\n';
    }
    return buffer;

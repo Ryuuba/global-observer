@@ -176,6 +176,25 @@ Table::setCid(uint32_t id, uint32_t c)
 }
 
 void
+Table::setHops(uint32_t id, uint8_t hops)
+{
+   if(table.find(id) == table.end())
+   {
+		node_state state;
+		state.setUID(id);
+      table[id] = state;
+   }
+   else if(table[id].getHopsToTheLeaderIterator().first)
+	{
+      auto it = table[id].
+                getHopsToTheLeaderIterator().second;
+      hops_to_the_leader_list.erase(it);
+   }
+   auto it = hops_to_the_leader_list.insert(id, hops);
+   table[id].setHopsToTheLeader(it);
+}
+
+void
 Table::setState(uint32_t id, node_state s)
 {
    table[id] = s;
@@ -357,6 +376,24 @@ Table::getCidListMax() const
    return cid;
 }
 
+const uint8_p*
+Table::getHopListMin() const
+{
+   const uint8_p* hops = NULL;
+   if(!hops_to_the_leader_list.empty())
+      hops = &(*hops_to_the_leader_list.begin());
+   return hops;
+}
+
+const uint8_p*
+Table::getHopListMax() const
+{
+   const uint8_p* hops = NULL;
+   if(!hops_to_the_leader_list.empty())
+      hops = &(*hops_to_the_leader_list.max());
+   return hops;
+}
+
 const coordp_bag*
 Table::accessPositionList() const
 {
@@ -438,6 +475,15 @@ Table::accessCidList() const
    if(!cid_list.empty())
       cidList = &cid_list;
    return cidList;
+}
+
+const uint8p_bag*
+Table::accessHopList() const
+{
+   const uint8p_bag* hopList = NULL;
+   if(!hops_to_the_leader_list.empty())
+      hopList = &hops_to_the_leader_list;
+   return hopList;
 }
 
 unsigned int
