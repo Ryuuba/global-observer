@@ -504,7 +504,7 @@ Clustering::computeNeighborhood(uint32_t nodeID)
          nodeID != *neighborID &&
          mypos->distance(*neighbor_pos) <= range
       )
-         n.insert(*neighborID);
+         n.insert(*neighborID, 1);
    }
    return n;
 }
@@ -515,15 +515,23 @@ Clustering::computeNeighborhood(uint32_t nodeID)
 
 //k is the number of hops
 Neighborhood
-Clustering::computeNeighborhood(uint32_t nodeID, uint8_t k)
+Clustering::
+computeNeighborhood(uint32_t nodeID, uint8_t k)
 {
    Neighborhood oneHop, kHop;
-   //get the neighborhood of the node with ID = nodeID
+   static std::unordered_map<uint32_t,bool> visited;
+   visited[nodeID] = true;
+   //gets the neighborhood of the node with ID = nodeID
    oneHop = *globalNodeTable.getState(nodeID).getOneHop();
-   kHop = oneHop;
+   for(auto& neighbor : oneHop)
+      if(visited.find(neighbor.first) == visited.end())
+         kHop.insert(neighbor.first, hops-k+1);
    if(k > 1)
       for(auto& neighbor : oneHop)//for each neighbor in n
-         kHop += computeNeighborhood(neighbor, k-1);
-   kHop.erase(nodeID);
+         if(visited.find(neighbor) == visited.end())
+            kHop +=
+            computeNeighborhood(neighbor.first, k-1);
+   if(k == hops)
+      visited.clear();
    return kHop;
 }

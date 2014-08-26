@@ -200,20 +200,6 @@ node_state::getOneHop() const
    return temp_neighborhood;
 }
 
-/*
-//It returns a pointer to the size of the
-//one-hop-neighborhood of a node. If the corresponding
-//iterator is not set, then a NULL pointer is returned.
-unsigned int*
-node_state::getDegree()
-{
-   int* temp_degree = NULL;
-   if(isOneHopSet)
-      temp_degree = new int(one_hop->value().size());
-   return temp_degree;
-}
-*/
-
 //It returns, into a pair structure, a bool value and an
 //iterator pointing to the one-hop neighborhoof of a node.
 //The bool value informs if the neighborhood iterator

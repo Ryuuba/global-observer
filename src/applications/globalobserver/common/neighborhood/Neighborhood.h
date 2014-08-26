@@ -2,19 +2,22 @@
 #define NEIGHBORHOOD_H
 #include <iostream>
 #include <set>
+#include <utility>
 #include <cstdint>
 #include <string>
 
 class Neighborhood
 {
-   protected:
-      std::set<uint32_t> vicinity;
    public:
-      typedef std::set<uint32_t>::iterator iterator;
-      typedef std::set<uint32_t>::const_iterator const_iterator;
+      //pair of kind <neighbor ID, hops>
+      typedef std::pair<uint32_t,uint8_t> Neighbor;
+      typedef std::set<Neighbor>::iterator iterator;
+      typedef std::set<Neighbor>::
+              const_iterator const_iterator;
       Neighborhood();
       virtual ~Neighborhood();
-      virtual iterator insert(uint32_t id);
+      virtual iterator insert(uint32_t id, uint8_t hops);
+      virtual iterator insert(Neighbor neighbor);
       virtual unsigned int erase(uint32_t id);
       virtual iterator begin();
       virtual iterator end();
@@ -26,24 +29,27 @@ class Neighborhood
       virtual iterator find(uint32_t id);
       virtual iterator find(uint32_t id) const;
       virtual Neighborhood operator+
-      (const Neighborhood& n) const;
-      virtual void operator+= (const Neighborhood& n);
-      virtual bool operator==
-      (const Neighborhood& n) const;
-      virtual bool operator!=
-      (const Neighborhood& n) const;
-      virtual std::string info() const;
+              (const Neighborhood& n) const;
+      virtual void operator += (const Neighborhood& n);
+      virtual bool operator ==
+              (const Neighborhood& n) const;
+      virtual bool operator !=
+              (const Neighborhood& n) const;
+   protected:
+      std::set<Neighbor> neighborhood;
 };
 
 inline std::ostream&
 operator << (std::ostream& os, Neighborhood& n)
 {
    std::string buffer;
-   Neighborhood::iterator it;
-
-   for (it = n.begin(); it != n.end(); it++)
+   for (auto& neighbor : n)
    {
-      buffer+=std::to_string((int)*it);
+      buffer+="neighbor ID: "
+      buffer+=std::to_string((int)neighbor.first);
+      buffer+=' ';
+      buffer+="hops: ";
+      buffer+=std::to_string((int)neighbor.second);
       buffer+= " ";
    }
    return os << buffer;
