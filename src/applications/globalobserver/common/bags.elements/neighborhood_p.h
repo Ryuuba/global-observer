@@ -21,7 +21,7 @@ class neighborhood_p
       virtual Neighborhood value() const;
       virtual const Neighborhood* value_p() const;
       virtual void value(Neighborhood n);
-      virtual void insert(uint32_t neighbor);
+      virtual void insert(Neighborhood::Neighbor neighbor);
       virtual bool
       operator == (const neighborhood_p& pair_t) const;
       virtual bool

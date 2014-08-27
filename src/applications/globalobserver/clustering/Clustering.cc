@@ -124,13 +124,9 @@ Clustering::updateTable()
 
 void
 Clustering::organizeClusters()
-{
-   organizeClusteredNodes();
-   if(ev.isGUI())
-      changeIconColor();
+{  
    organizeLeaders();
-   if(ev.isGUI())
-      changeIconColor();
+   organizeClusteredNodes();
 }
 
 void
@@ -172,10 +168,11 @@ organizeLeaders()
          it++;
          continue;
       }
-      for(auto& neighborID : *leaderNeighborhood)
+      for(auto& neighbor : *leaderNeighborhood)
       {
          neighborRole =
-         globalNodeTable.getState(neighborID).getRole();  
+         globalNodeTable.getState(neighbor.first).
+         getRole();  
          if(*neighborRole == Role::LEADER)
          {
             if(invalid->empty())
@@ -247,9 +244,9 @@ Clustering::organizeClusteredNodes()
       getKHop();
       const uint32* myleader =
       globalNodeTable.getState(clusteredNodeID).getCid();
-      for(auto& neighborID : *myKVicinity)
+      for(auto& neighbor : *myKVicinity)
       {
-         if(neighborID == *myleader)
+         if(neighbor.first == *myleader)
          {
             isRoleValid = true;
             break;
@@ -298,14 +295,45 @@ Clustering::makeCluster(uint32_t leaderID)
    //neighborhood of the leader. neighbor is the UID of
    //each node in the k-hop neighborhood of the leader
    for(auto& neighbor : *cluster)
-      if(*globalNodeTable.getState(neighbor).getRole() == 
-         Role::UNCLUSTERED)
+   {
+      if(*globalNodeTable.getState(neighbor.first).
+         getRole() == Role::UNCLUSTERED)
       {
          //sets to neighbor the role CLUSTERED
-         globalNodeTable.setRole(neighbor,Role::CLUSTERED);
+         globalNodeTable.
+         setRole(neighbor.first,Role::CLUSTERED);
          //sets to neighbor a CID equals the leader ID
-         globalNodeTable.setCid(neighbor, leaderID);
+         globalNodeTable.
+         setCid(neighbor.first, leaderID);
       }
+      else if(*globalNodeTable.getState(neighbor.first).
+              getRole() == Role::CLUSTERED)
+      {
+         auto leaderOfMyNeighbor = 
+         getLeaderOf(neighbor.first);
+         if(neighbor.second < leaderOfMyNeighbor.second)
+         {
+         //sets to neighbor the role CLUSTERED
+         globalNodeTable.
+         setRole(neighbor.first,Role::CLUSTERED);
+         //sets to neighbor a CID equals the leader ID
+         globalNodeTable.
+         setCid(neighbor.first, leaderID);
+         }
+         else if
+         (neighbor.second == leaderOfMyNeighbor.second &&
+          leaderID < leaderOfMyNeighbor.first)
+         {
+         //sets to neighbor the role CLUSTERED
+         globalNodeTable.
+         setRole(neighbor.first,Role::CLUSTERED);
+         //sets to neighbor a CID equals the leader ID
+         globalNodeTable.
+         setCid(neighbor.first, leaderID);
+         }
+      }
+
+   }
 }
 
 void
@@ -321,16 +349,39 @@ Clustering::getRidOf(uint32_t leaderID)
    //neighborhood of the ex-leader. neighbor is the UID of
    //each node in the k-hop neighborhood of the ex-leader
    for(auto& neighbor : *cluster)
-      if(*globalNodeTable.getState(neighbor).getCid() == 
+      if(*globalNodeTable.
+          getState(neighbor.first).getCid() == 
          leaderID)
       {
          //sets to neighbor the role CLUSTERED
          globalNodeTable.
-         setRole(neighbor,Role::UNCLUSTERED);
+         setRole(neighbor.first,Role::UNCLUSTERED);
          //neighbor CID equals the leader ID
-         globalNodeTable.setCid(neighbor, 0);
+         globalNodeTable.setCid(neighbor.first, 0);
       }
    leaderTable.setEndTime(leaderID,simTime());
+}
+
+Neighborhood::Neighbor
+Clustering::getLeaderOf(uint32_t id)
+{
+   Neighborhood::Neighbor leader(0,0);
+   const rolep_bag* roleList =
+   globalNodeTable.accessRoleList();
+   const Neighborhood* vicinity =
+   globalNodeTable.getState(id).accessRoleList();
+   auto leaderRange = roleList->equalRange(Role::LEADER);
+
+   for(auto it = leaderRange.first;
+            it != leaderRange.second;
+            it ++)
+      if(vicinity->find(it->key()) != vicinity->end())
+      {
+         leader.first = it->key();
+         leader.second = vicinity->value(it->key());
+         break;
+      }
+   return leader;
 }
 
 std::pair<bool,uint32_t>
@@ -509,29 +560,27 @@ Clustering::computeNeighborhood(uint32_t nodeID)
    return n;
 }
 
-//TODO: Modify neighborhood to store pairs that inform
-//hops <neighbor, hops>. This information allows connect
-//nodes with the most nearest leader
-
 //k is the number of hops
 Neighborhood
 Clustering::
 computeNeighborhood(uint32_t nodeID, uint8_t k)
 {
-   Neighborhood oneHop, kHop;
-   static std::unordered_map<uint32_t,bool> visited;
-   visited[nodeID] = true;
-   //gets the neighborhood of the node with ID = nodeID
-   oneHop = *globalNodeTable.getState(nodeID).getOneHop();
-   for(auto& neighbor : oneHop)
-      if(visited.find(neighbor.first) == visited.end())
+   const Neighborhood* oneHop;
+   static Neighborhood kHop;
+   if(k == hops)
+   {
+      kHop.clear();
+      kHop.insert(nodeID,0);
+   }
+   oneHop = globalNodeTable.getState(nodeID).getOneHop();
+   for(auto& neighbor : *oneHop)
+      if(kHop.find(neighbor.first) == kHop.end() ||
+         hops-k+1 < kHop.value(neighbor.first))
          kHop.insert(neighbor.first, hops-k+1);
    if(k > 1)
-      for(auto& neighbor : oneHop)//for each neighbor in n
-         if(visited.find(neighbor) == visited.end())
-            kHop +=
-            computeNeighborhood(neighbor.first, k-1);
+      for(auto& neighbor : *oneHop)//for each neighbor in n
+         kHop += computeNeighborhood(neighbor.first, k-1);
    if(k == hops)
-      visited.clear();
+      kHop.erase(nodeID);
    return kHop;
 }

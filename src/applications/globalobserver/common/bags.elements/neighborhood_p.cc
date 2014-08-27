@@ -45,7 +45,7 @@ neighborhood_p::value_p() const
 }
 
 void
-neighborhood_p::insert(uint32_t neighbor)
+neighborhood_p::insert(Neighborhood::Neighbor neighbor)
 {
    pair.second.insert(neighbor);
 }

@@ -4,25 +4,35 @@ Neighborhood::Neighborhood(){}
 
 Neighborhood::~Neighborhood(){}
 
-Neighborhood::iterator
+void
 Neighborhood::insert(uint32_t id, uint8_t hops)
 {
-   auto pair = std::make_pair(id,hops);
-   return neighborhood.insert(pair).first;
+   neighborhood[id] = hops;
 }
 
-Neighborhood::iterator
+void
 Neighborhood::insert(Neighborhood::Neighbor neighbor)
 {
-   return neighborhood.insert(neighbor).first;
+   neighborhood[neighbor.first] = neighbor.second;
+}
+
+uint8_t
+Neighborhood::value(uint32_t id)
+{
+   return neighborhood[id];
+}
+
+uint8_t
+Neighborhood::value(uint32_t id) const
+{
+   return neighborhood.find(id)->second;
 }
 
 
 unsigned int
 Neighborhood::erase(uint32_t id)
 {
-   auto pair = std::make_pair(id,0);
-   return neighborhood.erase(pair);
+   return neighborhood.erase(id);
 }
 
 Neighborhood::iterator
@@ -31,7 +41,7 @@ Neighborhood::begin()
    return neighborhood.begin();
 }
 
-Neighborhood::iterator
+Neighborhood::const_iterator
 Neighborhood::begin() const
 {
    return neighborhood.begin();
@@ -43,7 +53,7 @@ Neighborhood::end()
    return neighborhood.end();
 }
 
-Neighborhood::iterator
+Neighborhood::const_iterator
 Neighborhood::end() const
 {
    return neighborhood.end();
@@ -70,15 +80,13 @@ Neighborhood::clear()
 Neighborhood::iterator
 Neighborhood::find(uint32_t id)
 {
-   auto pair = std::make_pair(id,0);
-   return neighborhood.find(pair);
+   return neighborhood.find(id);
 }
 
-Neighborhood::iterator
+Neighborhood::const_iterator
 Neighborhood::find(uint32_t id) const
 {
-   auto pair = std::make_pair(id,0);
-   return neighborhood.find(pair);
+   return neighborhood.find(id);
 }
 
 std::string
@@ -88,18 +96,17 @@ Neighborhood::info() const
    if(!neighborhood.empty())
       for (auto& neighbor : neighborhood)
       {
-         buffer+="neighbor ID: "
+         buffer+='<';
          buffer+=std::to_string((int)neighbor.first);
-         buffer+=' ';
-         buffer+="hops: ";
+         buffer+=", ";
          buffer+=std::to_string((int)neighbor.second);
-         buffer+= " ";
+         buffer+= '>';
       }
    return buffer;
 }
 
 Neighborhood
-neighborhood::operator + (const Neighborhood& n) const
+Neighborhood::operator + (const Neighborhood& n) const
 {
    Neighborhood temp;
    temp = *this;
@@ -109,20 +116,20 @@ neighborhood::operator + (const Neighborhood& n) const
 }
 
 void
-Neighborhood::operator += (const neighborhood& n)
+Neighborhood::operator += (const Neighborhood& n)
 {
    for(auto& neighbor : n)
       this->insert(neighbor);
 }
 
 bool
-Neighborhood::operator == (const neighborhood& n) const
+Neighborhood::operator == (const Neighborhood& n) const
 {
    return *this == n;
 }
 
 bool
-Neighborhood::operator != (const neighborhood& n) const
+Neighborhood::operator != (const Neighborhood& n) const
 {
    return !(*this == n);
 }

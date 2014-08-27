@@ -101,6 +101,10 @@ public IGlobalObserver{
       //leader neighbors
       virtual void organizeLeaders();
 
+      //Returns the leader ID of the give node
+      virtual Neighborhood::Neighbor
+      getLeaderOf(uint32_t id);
+
       //Unclusters the neighborhood of a leader
       virtual void getRidOf(uint32_t leaderID);
 

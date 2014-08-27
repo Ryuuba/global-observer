@@ -20,7 +20,6 @@ class Table
       neighborhoodp_bag k_hop_neighborhood_list;
       rolep_bag role_list;
       uint32p_bag cid_list;
-      uint8p_bag hops_to_the_leader_list;
       std::unordered_map<uint32_t,node_state> table;
    public:
       Table(); //default constructor
@@ -46,7 +45,6 @@ class Table
               (uint32_t id, Neighborhood n);
       virtual void setRole(uint32_t id, Role r);
       virtual void setCid(uint32_t id, uint32_t c);
-      virtual void setHops(uint32_t id, uint8_t hops);
       virtual void setState(uint32_t id, node_state s);
       //method to get the attributes of a node, if the
       //state does not exist, then a empty state is
@@ -87,8 +85,6 @@ class Table
               getCidListMin() const;
       virtual const uint32_p*
               getCidListMax() const;
-      virtual const uint8_p* getHopListMin() const;
-      virtual const uint8_p* getHopListMax() const;      
       //methods to only-read the lists
       virtual const coordp_bag* accessPositionList() const;
       virtual const doublep_bag* accessSpeedList() const;
@@ -104,7 +100,6 @@ class Table
               accessKHopNeighborhoodList() const;
       virtual const rolep_bag* accessRoleList() const;
       virtual const uint32p_bag* accessCidList() const;
-      virtual const uint8p_bag* accessHopList() const;
       //methods to access and to manage the table
       virtual unsigned int size() const;
       virtual void erase(uint32_t id);
