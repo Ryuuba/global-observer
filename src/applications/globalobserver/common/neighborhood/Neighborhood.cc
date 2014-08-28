@@ -19,13 +19,20 @@ Neighborhood::insert(Neighborhood::Neighbor neighbor)
 uint8_t
 Neighborhood::value(uint32_t id)
 {
-   return neighborhood[id];
+   uint8_t result = 255;
+   if(neighborhood.find(id) != neighborhood.end())
+      result = neighborhood.find(id)->second;
+   return result;
+
 }
 
 uint8_t
 Neighborhood::value(uint32_t id) const
 {
-   return neighborhood.find(id)->second;
+   uint8_t result = 255;
+   if(neighborhood.find(id) != neighborhood.end())
+      result = neighborhood.find(id)->second;
+   return result;
 }
 
 

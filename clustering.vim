@@ -40,14 +40,15 @@ set shortmess=aoO
 badd +1 Tools/inet/src/applications/globalobserver/clustering/Clustering.cc
 badd +1 Tools/inet/src/applications/globalobserver/clustering/Clustering.h
 badd +436 Tools/inet/src/applications/globalobserver/common/global.node.table/Table.cc
-badd +11 Tools/inet/src/applications/globalobserver/common/global.node.table/node_state.h
+badd +68 Tools/inet/src/applications/globalobserver/common/global.node.table/node_state.h
 badd +1 Tools/inet/src/applications/globalobserver/common/global.node.table/Table.h
 badd +61 Tools/inet/examples/mobility.sim/omnetpp.ini
 badd +18 Tools/inet/examples/mobility.sim/Bonnmotion_grid_small.mob
 badd +13 Tools/inet/src/applications/globalobserver/common/bags.elements/uint32_p.h
-badd +0 Tools/inet/src/applications/globalobserver/common/bags.elements/uint32_p.cc
+badd +54 Tools/inet/src/applications/globalobserver/common/bags.elements/uint32_p.cc
 badd +82 Tools/inet/src/applications/globalobserver/common/bags.elements/role_p.cc
-badd +0 Tools/inet/src/applications/globalobserver/common/bags.elements/role_p.h
+badd +39 Tools/inet/src/applications/globalobserver/common/bags.elements/role_p.h
+badd +0 Tools/inet/src/applications/globalobserver/common/global.node.table/node_state.cc
 silent! argdel *
 edit Tools/inet/src/applications/globalobserver/clustering/Clustering.h
 set splitbelow splitright
@@ -165,11 +166,11 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 91 - ((27 * winheight(0) + 14) / 28)
+let s:l = 31 - ((1 * winheight(0) + 14) / 28)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-91
+31
 normal! 0
 lcd ~/
 wincmd w
@@ -278,14 +279,13 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 82 - ((6 * winheight(0) + 14) / 28)
+let s:l = 371 - ((19 * winheight(0) + 14) / 28)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-82
-normal! 06|
+371
+normal! 039|
 wincmd w
-2wincmd w
 exe 'vert 1resize ' . ((&columns * 63 + 64) / 128)
 exe 'vert 2resize ' . ((&columns * 64 + 64) / 128)
 tabedit ~/Tools/inet/src/applications/globalobserver/common/global.node.table/Table.h
@@ -404,16 +404,16 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 37 - ((0 * winheight(0) + 14) / 28)
+let s:l = 46 - ((12 * winheight(0) + 14) / 28)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-37
-normal! 031|
+46
+normal! 042|
 lcd ~/
 wincmd w
 argglobal
-edit ~/Tools/inet/src/applications/globalobserver/common/global.node.table/node_state.h
+edit ~/Tools/inet/src/applications/globalobserver/common/global.node.table/Table.cc
 setlocal keymap=
 setlocal noarabic
 setlocal noautoindent
@@ -517,17 +517,16 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 61 - ((14 * winheight(0) + 14) / 28)
+let s:l = 1 - ((0 * winheight(0) + 14) / 28)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-61
-normal! 014|
+1
+normal! 0
 wincmd w
-2wincmd w
 exe 'vert 1resize ' . ((&columns * 63 + 64) / 128)
 exe 'vert 2resize ' . ((&columns * 64 + 64) / 128)
-tabedit ~/Tools/inet/src/applications/globalobserver/common/bags.elements/uint32_p.cc
+tabedit ~/Tools/inet/src/applications/globalobserver/common/global.node.table/node_state.h
 set splitbelow splitright
 wincmd _ | wincmd |
 vsplit
@@ -643,16 +642,16 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 49 - ((0 * winheight(0) + 14) / 28)
+let s:l = 1 - ((0 * winheight(0) + 14) / 28)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-49
+1
 normal! 0
 lcd ~/
 wincmd w
 argglobal
-edit ~/Tools/inet/src/applications/globalobserver/common/bags.elements/role_p.h
+edit ~/Tools/inet/src/applications/globalobserver/common/global.node.table/node_state.cc
 setlocal keymap=
 setlocal noarabic
 setlocal noautoindent
@@ -756,17 +755,17 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 40 - ((9 * winheight(0) + 14) / 28)
+let s:l = 1 - ((0 * winheight(0) + 14) / 28)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-40
+1
 normal! 0
 wincmd w
 2wincmd w
 exe 'vert 1resize ' . ((&columns * 64 + 64) / 128)
 exe 'vert 2resize ' . ((&columns * 63 + 64) / 128)
-tabnext 1
+tabnext 3
 if exists('s:wipebuf')
   silent exe 'bwipe ' . s:wipebuf
 endif

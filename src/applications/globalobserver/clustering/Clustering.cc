@@ -110,7 +110,6 @@ Clustering::updateTable()
    if(ev.isGUI())
       changeIconColor();
    printClusters();
-   printTable();
 }
 
 void
@@ -203,34 +202,17 @@ Clustering::organizeClusteredNodes()
    std::set<uint32_t> invalidClusteredNodes;
    auto clusteredNodeRange =
    roleList->equalRange(Role::CLUSTERED);
-   bool isRoleValid = false;
- 
    for(auto it =  clusteredNodeRange.first;
             it != clusteredNodeRange.second;
             it ++)
    {
       clusteredNodeID = it->key();
-      const Neighborhood* myKVicinity =
-      globalNodeTable.getState(clusteredNodeID).
-      getKHop();
-      const uint32* myleader =
-      globalNodeTable.getState(clusteredNodeID).getCid();
-      for(auto& neighbor : *myKVicinity)
-      {
-         if(neighbor.first == *myleader)
-         {
-            isRoleValid = true;
-            break;
-         }
-      }
-      if(!isRoleValid)
+      auto myleader = getLeaderOf(clusteredNodeID);
+      if(myleader.first == 65535)
          invalidClusteredNodes.insert(clusteredNodeID);
-      else
-         isRoleValid = false;
    }
    for(auto& id : invalidClusteredNodes)
    {
-
       globalNodeTable.setRole(id, Role::UNCLUSTERED);
       globalNodeTable.setCid(id,0);
    }
@@ -254,8 +236,8 @@ Clustering::makeCluster(uint32_t leaderID)
    const Neighborhood* cluster;
    //sets role LEADER
    globalNodeTable.setRole(leaderID, Role::LEADER);
-   //sets cid using the CID leader ID
-   globalNodeTable.setCid(leaderID, leaderID);
+   //sets cid using the CID leader ID plus 1000
+   globalNodeTable.setCid(leaderID, leaderID+1000);
    //store the leader in the leaderTable. The insertion
    //is only performed when the leader ID is not in the
    //leaderTable
@@ -276,7 +258,7 @@ Clustering::makeCluster(uint32_t leaderID)
          setRole(neighbor.first,Role::CLUSTERED);
          //sets to neighbor a CID equals the leader ID
          globalNodeTable.
-         setCid(neighbor.first, leaderID);
+         setCid(neighbor.first, leaderID+1000);
       }
       else if(*globalNodeTable.getState(neighbor.first).
               getRole() == Role::CLUSTERED)
@@ -286,13 +268,13 @@ Clustering::makeCluster(uint32_t leaderID)
          if(neighbor.second < leaderOfMyNeighbor.second)
          //sets to neighbor a CID equals the leader ID
             globalNodeTable.
-            setCid(neighbor.first, leaderID);
+            setCid(neighbor.first, leaderID+1000);
          else if
          (neighbor.second == leaderOfMyNeighbor.second &&
           leaderID < leaderOfMyNeighbor.first)
             //sets to neighbor a CID equals the leader ID
             globalNodeTable.
-            setCid(neighbor.first, leaderID);
+            setCid(neighbor.first, leaderID+1000);
       }
    }
 }
@@ -312,12 +294,12 @@ Clustering::getRidOf(uint32_t leaderID)
    for(auto& neighbor : *cluster)
       if(*globalNodeTable.
           getState(neighbor.first).getCid() == 
-         leaderID)
+         leaderID+1000)
       {
          //sets to neighbor the role CLUSTERED
          globalNodeTable.
          setRole(neighbor.first,Role::UNCLUSTERED);
-         //neighbor CID equals the leader ID
+         //neighbor CID equals 0
          globalNodeTable.setCid(neighbor.first, 0);
       }
    leaderTable.setEndTime(leaderID,simTime());
@@ -326,13 +308,16 @@ Clustering::getRidOf(uint32_t leaderID)
 Neighborhood::Neighbor
 Clustering::getLeaderOf(uint32_t id)
 {
-   Neighborhood::Neighbor leader(0,0);
+   Neighborhood::Neighbor leader(65535,255);
    const Neighborhood* vicinity =
    globalNodeTable.getState(id).getKHop();
-   const uint32_t* cid =
-   globalNodeTable.getState(id).getCid();
-   if(cid)
-      leader = *vicinity->find(*cid);
+   uint32_t myleader =
+   *globalNodeTable.getState(id).getCid() - 1000;
+   if(vicinity->find(myleader) != vicinity->end())
+   {
+      leader.first = myleader;
+      leader.second = vicinity->value(myleader);
+   }
    return leader;
 }
 
@@ -657,9 +642,9 @@ Clustering::printClusters()
             it++)
    {
       leaderID = it->key();
-      ev << "Cluster " << (int)leaderID << ": ";
+      ev << "Cluster " << (int)leaderID+1000 << ": ";
       auto clusteredNodeRange = 
-      cidList->equalRange(leaderID);
+      cidList->equalRange(leaderID+1000);
       for(auto it =  clusteredNodeRange.first;
                it != clusteredNodeRange.second;
                it ++)
