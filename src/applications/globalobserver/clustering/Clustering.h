@@ -129,6 +129,9 @@ public IGlobalObserver{
       //Prints cluster information
       virtual void printClusters();
 
+      //Prints global node table
+      virtual void printTable();
+
    public:
       Clustering();
       ~Clustering();

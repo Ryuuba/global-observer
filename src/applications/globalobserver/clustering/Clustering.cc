@@ -110,6 +110,7 @@ Clustering::updateTable()
    if(ev.isGUI())
       changeIconColor();
    printClusters();
+   printTable();
 }
 
 void
@@ -229,6 +230,7 @@ Clustering::organizeClusteredNodes()
    }
    for(auto& id : invalidClusteredNodes)
    {
+
       globalNodeTable.setRole(id, Role::UNCLUSTERED);
       globalNodeTable.setCid(id,0);
    }
@@ -678,4 +680,12 @@ Clustering::printClusters()
    for(auto& node : nodes)
       ev << (int)node << ' ';
    ev << endl;
+}
+
+void
+Clustering::printTable()
+{
+   ev << "Global node table contains: " << endl;
+   for(auto& pair : globalNodeTable)
+      ev << pair.second.info();
 }
