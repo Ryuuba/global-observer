@@ -26,6 +26,7 @@ Clustering::initialize()
    scheduleAt(simTime()+updateDelay, update);
    numberOfLeaders = registerSignal("leaders");
    leadershipTime = registerSignal("leaderOff");
+   leaderChurn = registerSignal("changes");
 }
 
 void
@@ -35,18 +36,6 @@ Clustering::handleMessage(cMessage* msg)
    {
       if(receivedMessages == 0)
       {
-         for(auto& pair : leaderTable)
-         {
-            if(pair.second.second == 0.0)
-            {
-               simtime_t leadershipPeriod =
-               simTime() - pair.second.first;
-               emit(leadershipTime, leadershipPeriod);
-            }
-         }
-         std::cout << "leader table content:" 
-                   << std::endl
-                   << leaderTable.info() << std::endl;
          delete msg;
          endSimulation();
       }
@@ -66,23 +55,30 @@ Clustering::emitStatistics()
    auto roleList = globalNodeTable.accessRoleList();
    uint8_t leaderSetSize = roleList->count(Role::LEADER);
    std::list<uint32_t> leadersToBeErased;
+   uint8_t changes;
+
    emit(numberOfLeaders, leaderSetSize);
+   ev << "Number of leaders: "
+      << (int)leaderSetSize << endl;
+
    for(auto& pair : leaderTable)
    {
       simtime_t leadershipPeriod =
       pair.second.second - pair.second.first;
-      if(leadershipPeriod < 0)
-         continue;
-      else
+      if(leadershipPeriod > 0)
       {
          emit(leadershipTime,leadershipPeriod);
          leadersToBeErased.push_back(pair.first);
       }
    }
+   ev << "Leadership time:" << '\n'
+      << leaderTable.info();
    for(auto& id : leadersToBeErased)
       leaderTable.erase(id);
-   ev << "leader table content:" << '\n'
-      << leaderTable.info() << endl;
+   changes = leaderTable.getChanges();
+   emit(leaderChurn, changes);
+   ev << "Leadership changes: " << (int)changes << endl;
+   leaderTable.resetChanges();   
 }
 
 void
@@ -107,26 +103,20 @@ Clustering::updateTable()
 {
    computeNeighborhood();
    if(!isRoleListInitialized)
-   {
       initializeRoleList();
-      if(ev.isGUI())
-         changeIconColor();
-   }
    else
       organizeClusters();
    makeClusters();
    if(ev.isGUI())
       changeIconColor();
-
-   for(auto pair : globalNodeTable)
-      ev << globalNodeTable.info(pair.first) << endl;
+   printClusters();
 }
 
 void
 Clustering::organizeClusters()
 {  
-   organizeLeaders();
    organizeClusteredNodes();
+   organizeLeaders();
 }
 
 void
@@ -145,20 +135,11 @@ organizeLeaders()
    auto leaderRange = roleList->equalRange(Role::LEADER);
    auto it = leaderRange.first;
    bool isLeaderInvalid = false;
-   ev << "computing invalid leaders . . ." << endl;
-   ev << "list of leaders: ";
-   for(auto it_i = leaderRange.first;
-            it_i!=leaderRange.second; it_i++)
-      ev << it_i->key() << ' ';
-   ev << endl;
    do
    {
       leaderID = it->key();
       leaderNeighborhood =
       globalNodeTable.getState(leaderID).getKHop();
-      ev << "Leader ID: " << leaderID << ' '
-         << (int)hops << "-hop neighborhood: "
-         << leaderNeighborhood->info() << endl;
       if(leaderNeighborhood->size() == 0)
       {
          if(invalid->empty())
@@ -202,20 +183,9 @@ organizeLeaders()
       }
       it++;
    }while(it != leaderRange.second);
-   ev << "invalid leaders: ";
-   for(auto& id : *invalid)
-      ev << (int)id << ' ';
-   ev << endl;
-   ev << "valid leaders: ";
-   for(auto& id : *valid)
-      ev << (int)id << ' ';
-   ev << endl;
    if(!invalid->empty())
       for(auto& id : *invalid)
-      {
-         ev << "unclustering leader " << id << endl;
          getRidOf(id);
-      }
    if(!valid->empty())
       for(auto& id : *valid)
          makeCluster(id);
@@ -312,27 +282,16 @@ Clustering::makeCluster(uint32_t leaderID)
          auto leaderOfMyNeighbor = 
          getLeaderOf(neighbor.first);
          if(neighbor.second < leaderOfMyNeighbor.second)
-         {
-         //sets to neighbor the role CLUSTERED
-         globalNodeTable.
-         setRole(neighbor.first,Role::CLUSTERED);
          //sets to neighbor a CID equals the leader ID
-         globalNodeTable.
-         setCid(neighbor.first, leaderID);
-         }
+            globalNodeTable.
+            setCid(neighbor.first, leaderID);
          else if
          (neighbor.second == leaderOfMyNeighbor.second &&
           leaderID < leaderOfMyNeighbor.first)
-         {
-         //sets to neighbor the role CLUSTERED
-         globalNodeTable.
-         setRole(neighbor.first,Role::CLUSTERED);
-         //sets to neighbor a CID equals the leader ID
-         globalNodeTable.
-         setCid(neighbor.first, leaderID);
-         }
+            //sets to neighbor a CID equals the leader ID
+            globalNodeTable.
+            setCid(neighbor.first, leaderID);
       }
-
    }
 }
 
@@ -366,21 +325,12 @@ Neighborhood::Neighbor
 Clustering::getLeaderOf(uint32_t id)
 {
    Neighborhood::Neighbor leader(0,0);
-   const rolep_bag* roleList =
-   globalNodeTable.accessRoleList();
    const Neighborhood* vicinity =
-   globalNodeTable.getState(id).accessRoleList();
-   auto leaderRange = roleList->equalRange(Role::LEADER);
-
-   for(auto it = leaderRange.first;
-            it != leaderRange.second;
-            it ++)
-      if(vicinity->find(it->key()) != vicinity->end())
-      {
-         leader.first = it->key();
-         leader.second = vicinity->value(it->key());
-         break;
-      }
+   globalNodeTable.getState(id).getKHop();
+   const uint32_t* cid =
+   globalNodeTable.getState(id).getCid();
+   if(cid)
+      leader = *vicinity->find(*cid);
    return leader;
 }
 
@@ -482,39 +432,6 @@ Clustering::initializeRoleList()
 }
 
 void
-Clustering::changeIconColor()
-{
-   cModule* host;
-   const uint32_t* index;
-   for(auto& pair : globalNodeTable)
-   {
-      index = pair.second.getUID();//first?
-      host = simulation.
-             getSystemModule()->
-             getSubmodule("host", *index);
-      if(host)
-      {
-         cDisplayString& displayStr = 
-         host->getDisplayString();
-         const Role* role =
-         globalNodeTable.getState(*index).getRole();
-         if(*role == Role::LEADER)
-            displayStr.
-            parse("i=device/pocketpc_s,blue");
-         else if (*role == Role::CLUSTERED)
-            displayStr.
-            parse("i=device/pocketpc_s,yellow");
-         else if (*role == Role::GATEWAY)
-            displayStr.
-            parse("i=device/pocketpc_s,green");
-         else
-            displayStr.
-            parse("i=device/pocketpc_s");
-      }
-   }
-}
-
-void
 Clustering::computeNeighborhood()
 {
    Neighborhood oneHopVicinity, kHopVicinity;
@@ -570,7 +487,7 @@ computeNeighborhood(uint32_t nodeID, uint8_t k)
    if(k == hops)
    {
       kHop.clear();
-      kHop.insert(nodeID,0);
+      kHop.insert(nodeID, 0);
    }
    oneHop = globalNodeTable.getState(nodeID).getOneHop();
    for(auto& neighbor : *oneHop)
@@ -578,9 +495,187 @@ computeNeighborhood(uint32_t nodeID, uint8_t k)
          hops-k+1 < kHop.value(neighbor.first))
          kHop.insert(neighbor.first, hops-k+1);
    if(k > 1)
-      for(auto& neighbor : *oneHop)//for each neighbor in n
+      for(auto& neighbor : *oneHop)
          kHop += computeNeighborhood(neighbor.first, k-1);
    if(k == hops)
       kHop.erase(nodeID);
    return kHop;
+}
+
+void
+Clustering::changeIconColor()
+{
+   cModule* host;
+   const rolep_bag* roleList =
+   globalNodeTable.accessRoleList();
+   uint32_t nodeID, leaderID;
+   std::string iconAttr, color;
+   static std::unordered_map<uint32_t,std::string>
+   clusterColorTable;
+
+   //erases all staled datum
+   if(!clusterColorTable.empty())
+      for(auto& leader : clusterColorTable)
+         if(leaderTable.find(leader.first) ==
+            leaderTable.end())
+            clusterColorTable.erase(leaderID);
+
+   auto leaderRange =
+   roleList->equalRange(Role::LEADER);
+   for(auto it =  leaderRange.first;
+            it != leaderRange.second;
+            it ++)
+   {
+      leaderID = it->key();
+      host = simulation.
+             getSystemModule()->
+             getSubmodule("host", leaderID);
+      //contains icon attributes of a host
+      cDisplayString& displayStr =
+      host->getDisplayString();
+      //all new leader is inserted here
+      if(clusterColorTable.find(leaderID) ==
+         clusterColorTable.end())
+      {
+         color = pickRandomColor(); //color
+         clusterColorTable[leaderID] = color;
+      }
+      else
+         color = clusterColorTable[leaderID];
+      iconAttr = "i=device/pocketpc_s,"; //image
+      iconAttr += color;
+      iconAttr += ",50"; //brightness
+      displayStr.parse(iconAttr.c_str());
+   }
+
+   auto clusteredNodeRange =
+   roleList->equalRange(Role::CLUSTERED);
+   for(auto it =  clusteredNodeRange.first;
+            it != clusteredNodeRange.second;
+            it++)
+   {
+      nodeID = it->key();
+      leaderID = getLeaderOf(nodeID).first;
+      host = simulation.
+             getSystemModule()->
+             getSubmodule("host", nodeID);
+      //contains icon attributes of a host
+      cDisplayString& displayStr =
+      host->getDisplayString();
+      iconAttr = "i=device/pocketpc_vs,"; //image
+      iconAttr += clusterColorTable[leaderID];//color
+      iconAttr += ",30"; //brightness
+      displayStr.parse(iconAttr.c_str());
+   }
+
+   auto unclusteredNodeRange =
+   roleList->equalRange(Role::UNCLUSTERED);
+   for(auto it =  unclusteredNodeRange.first;
+            it != unclusteredNodeRange.second;
+            it ++)
+   {
+      nodeID = it->key();
+      host = simulation.
+             getSystemModule()->
+             getSubmodule("host", nodeID);
+      //contains icon attributes of a host
+      cDisplayString& displayStr =
+      host->getDisplayString();
+      displayStr.parse("i=device/pocketpc_vs");
+   }
+}
+
+std::string
+Clustering::pickRandomColor()
+{
+   std::string htmlColor;
+   uint8_t ruletteValue = intuniform(1,14);
+   switch(ruletteValue)
+   {
+      case 1:
+         htmlColor = "#FFFFFF";  //Black
+         break;
+      case 2:
+         htmlColor = "#000000";  //White
+         break;
+      case 3:
+         htmlColor = "#FF0000";  //Red
+         break;
+      case 4:
+         htmlColor = "#800000";  //Maroon
+         break;
+      case 5:
+         htmlColor = "#FFFF00";  //Yellow
+         break;
+      case 6:
+         htmlColor = "#808000";  //Olive
+         break;
+      case 7:
+         htmlColor = "#00FF00";  //Lime
+         break;
+      case 8:
+         htmlColor = "#008000";  //Green
+         break;
+      case 9:
+         htmlColor = "#00FFFF";  //Aqua
+         break;
+      case 10:
+         htmlColor = "#008080";  //Teal
+         break;
+      case 11:
+         htmlColor = "#0000FF";  //Blue
+         break;
+      case 12:
+         htmlColor = "#000080";  //Navy
+         break;
+      case 13:
+         htmlColor = "#FF00FF";  //Fucsia
+         break;
+      default:
+         htmlColor = "#000080";  //Purple
+         break;
+   }
+   return htmlColor;
+}
+
+void
+Clustering::printClusters()
+{
+   const uint32p_bag* cidList =
+   globalNodeTable.accessCidList();
+   const rolep_bag* roleList =
+   globalNodeTable.accessRoleList();
+   uint32_t leaderID;
+   std::set<uint32_t> nodes;
+
+   auto leaderRange = roleList->equalRange(Role::LEADER);
+
+   for(auto it =  leaderRange.first;
+            it != leaderRange.second;
+            it++)
+   {
+      leaderID = it->key();
+      ev << "Cluster " << (int)leaderID << ": ";
+      auto clusteredNodeRange = 
+      cidList->equalRange(leaderID);
+      for(auto it =  clusteredNodeRange.first;
+               it != clusteredNodeRange.second;
+               it ++)
+         nodes.insert(it->key());
+      for(auto& node : nodes)
+         ev << (int)node << ' ';
+      ev << endl;
+      nodes.clear();
+   }
+
+   ev << "Unclustered nodes: ";
+   auto unclusteredNodeRange =
+   roleList->equalRange(Role::UNCLUSTERED);
+   for(auto it =  unclusteredNodeRange.first;
+            it != unclusteredNodeRange.second;
+            it ++)
+      nodes.insert(it->key());
+   for(auto& node : nodes)
+      ev << (int)node << ' ';
+   ev << endl;
 }

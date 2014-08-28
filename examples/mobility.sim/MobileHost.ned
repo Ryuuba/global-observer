@@ -30,7 +30,7 @@ module MobileHost
     parameters:
         string mobilityType = default("StationaryMobility");
         @node();
-        @display("i=device/pocketpc_s");
+        @display("i=device/pocketpc_vs");
     submodules:
         mobility: <mobilityType> like IMobility;
 }

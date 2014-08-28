@@ -2,6 +2,7 @@
 #define _CLUSTERING_H
 #include <cstdint>
 #include <string>
+#include <random>
 #include "Table.h"
 #include "LeaderTable.h"
 #include "notification_m.h"
@@ -29,6 +30,7 @@ public IGlobalObserver{
       //Signals to record statistics
       simsignal_t numberOfLeaders;
       simsignal_t leadershipTime;
+      simsignal_t leaderChurn;
       //Datastructure to store the leadership-time
       LeaderTable leaderTable;
    protected:
@@ -116,10 +118,16 @@ public IGlobalObserver{
       //Colorizes a cluster. Cluster heads have a blue-icon
       //whereas clustered nodes have a gold-icon
       virtual void changeIconColor();
-            
+      
+      //Returns a string containing an HTML color
+      virtual std::string pickRandomColor();
+
       //emits the statistics of the leadershipTime and the
       //number of leaders
       virtual void emitStatistics();
+
+      //Prints cluster information
+      virtual void printClusters();
 
    public:
       Clustering();

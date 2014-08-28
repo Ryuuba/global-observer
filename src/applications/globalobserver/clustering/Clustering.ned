@@ -29,6 +29,8 @@ simple Clustering
       @statistic[numberOfLeaders](title = "number of leaders";source ="leaders";record = stats, vector);
       @signal[leaderOff](type = "simtime_t");
       @statistic[leadershipTime](title = "leadership time";source = "leaderOff";record = stats, vector);
+      @signal[changes](type = "long");
+      @statistics[leaderChurn](title = "leader churn"; source = "changes"; record = stats, vector);
    gates:
       input fromGlobalClustering;
 }

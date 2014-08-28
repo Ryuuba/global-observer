@@ -25,6 +25,8 @@ class uint32p_bag
       virtual unsigned int size();
       virtual void clear();
       virtual bool empty() const;
+      virtual std::pair<iterator,iterator>
+      equalRange(uint32_t v) const;
 };
 
 std::ostream&

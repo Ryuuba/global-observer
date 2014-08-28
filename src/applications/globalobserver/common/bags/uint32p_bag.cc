@@ -66,6 +66,15 @@ uint32p_bag::empty() const
    return bag.empty();
 }
 
+std::pair<uint32p_bag::iterator,uint32p_bag::iterator>
+uint32p_bag::equalRange(uint32_t v) const
+{
+   uint32_p pair;
+   pair.set(0,v);
+   return bag.equal_range(pair);
+}
+
+
 std::ostream&
 operator << (std::ostream& os, uint32p_bag& bag)
 {

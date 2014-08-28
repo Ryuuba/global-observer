@@ -28,10 +28,13 @@ class LeaderTable
       virtual unsigned int size();
       virtual uint32_t erase(uint32_t id);
       virtual void clear();
+      virtual uint8_t getChanges();
+      virtual void resetChanges();
       virtual iterator find(uint32_t id);
       virtual std::string info();
    protected:
       std::unordered_map<uint32_t,period_t> table;
+      uint8_t changes;
 };
 
 #endif

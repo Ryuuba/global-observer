@@ -1,6 +1,9 @@
 #include "LeaderTable.h"
 
-LeaderTable::LeaderTable(){}
+LeaderTable::LeaderTable()
+{
+   changes = 0;
+}
 
 LeaderTable::~LeaderTable(){}
 
@@ -11,6 +14,7 @@ LeaderTable::insertLeader(uint32_t id)
    if(table.find(id) == table.end())
    {
       table[id] = std::make_pair(0.0,0.0);
+      changes++;
       result = true;
    }
    return result;
@@ -64,7 +68,10 @@ LeaderTable::size()
 uint32_t
 LeaderTable::erase(uint32_t id)
 {
-   return table.erase(id);
+   uint32_t result = table.erase(id);
+   if(result == id)
+      changes++;
+   return result;
 }
 
 void
@@ -77,6 +84,18 @@ LeaderTable::iterator
 LeaderTable::find(uint32_t id)
 {
    return table.find(id);
+}
+
+uint8_t
+LeaderTable::getChanges()
+{
+   return changes;
+}
+
+void
+LeaderTable::resetChanges()
+{
+   changes = 0;
 }
 
 std::string
