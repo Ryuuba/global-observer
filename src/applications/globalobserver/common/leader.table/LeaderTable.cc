@@ -27,6 +27,7 @@ LeaderTable::setStartTime(uint32_t id, simtime_t start)
    if(table.find(id) == table.end())
    {
       table[id] = std::make_pair(start,0.0);
+      changes++;
       result = true;
    }
    return result;
@@ -41,10 +42,30 @@ LeaderTable::setEndTime(uint32_t id, simtime_t end)
       period_t temp = table[id];
       table.erase(id);
       temp.second = end;
-      table[id] = temp;
+      _table[id] = temp;
       result = true;
+      changes++;
    }
    return result;
+}
+
+uint8_t
+LeaderTable::getInvalidLeaderNumber()
+{
+   return _table.size();
+}
+
+simtime_t
+LeaderTable::getPeriod()
+{
+   simtime_t period = 0.0;
+   if(!_table.empty())
+   {
+      auto it = _table.begin();
+      period = it->second.second - it->second.first;
+      _table.erase(it);
+   }
+   return period;
 }
 
 LeaderTable::iterator
@@ -68,8 +89,8 @@ LeaderTable::size()
 uint32_t
 LeaderTable::erase(uint32_t id)
 {
-   uint32_t result = table.erase(id);
-   if(result == id)
+   uint32_t result = _table.erase(id);
+   if(result > 0)
       changes++;
    return result;
 }
@@ -98,11 +119,30 @@ LeaderTable::resetChanges()
    changes = 0;
 }
 
+void
+LeaderTable::clearInvalidLeaders()
+{
+   _table.clear();
+}
+
 std::string
 LeaderTable::info()
 {
    std::string buffer;
+   buffer += "Leader table:\n";
    for(auto& pair : table)
+   {
+      buffer += "leader ID: ";
+      buffer += std::to_string((int)pair.first);
+      buffer += " ";
+      buffer += "start time: ";
+      buffer +=
+      std::to_string(std::get<0>(pair.second).dbl());
+      buffer += "\n";
+   }
+   
+   buffer += "leaders to be erased:\n";
+   for(auto& pair : _table)
    {
       buffer += "leader ID: ";
       buffer += std::to_string((int)pair.first);
@@ -116,5 +156,7 @@ LeaderTable::info()
       std::to_string(std::get<1>(pair.second).dbl());
       buffer += "\n";
    }
+   
+
    return buffer;
 }

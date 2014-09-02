@@ -26,7 +26,7 @@ Clustering::initialize()
    scheduleAt(simTime()+updateDelay, update);
    numberOfLeaders = registerSignal("leaders");
    leadershipTime = registerSignal("leaderOff");
-   leaderChurn = registerSignal("changes");
+   leaderChurn = registerSignal("churn");
 }
 
 void
@@ -52,32 +52,22 @@ Clustering::handleMessage(cMessage* msg)
 void
 Clustering::emitStatistics()
 {
-   auto roleList = globalNodeTable.accessRoleList();
-   uint8_t leaderSetSize = roleList->count(Role::LEADER);
-   std::list<uint32_t> leadersToBeErased;
-   uint8_t changes;
-
-   emit(numberOfLeaders, leaderSetSize);
    ev << "Number of leaders: "
-      << (int)leaderSetSize << endl;
-
-   for(auto& pair : leaderTable)
+      << (int)leaderTable.size() << endl;
+   emit(numberOfLeaders, (int)leaderTable.size());   
+   
+   ev << leaderTable.info();
+   while(leaderTable.getInvalidLeaderNumber() > 0)
    {
-      simtime_t leadershipPeriod =
-      pair.second.second - pair.second.first;
-      if(leadershipPeriod > 0)
-      {
-         emit(leadershipTime,leadershipPeriod);
-         leadersToBeErased.push_back(pair.first);
-      }
+      auto period = leaderTable.getPeriod();
+      emit(leadershipTime, period);
    }
-   ev << "Leadership time:" << '\n'
-      << leaderTable.info();
-   for(auto& id : leadersToBeErased)
-      leaderTable.erase(id);
-   changes = leaderTable.getChanges();
-   emit(leaderChurn, changes);
-   ev << "Leadership changes: " << (int)changes << endl;
+   leaderTable.clearInvalidLeaders();
+
+   ev << "Leadership changes: "
+      << (int)leaderTable.getChanges() << endl;
+   emit(leaderChurn, (int)leaderTable.getChanges());
+
    leaderTable.resetChanges();   
 }
 
