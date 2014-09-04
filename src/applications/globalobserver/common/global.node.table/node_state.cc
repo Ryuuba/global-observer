@@ -5,6 +5,7 @@ node_state::node_state()
     isUidSet = false;
     isCidSet = false;
     isPositionSet = false;
+    isDistanceSet = false;
     isPauseTimeSet = false;
     isMotionTimeSet = false;
     isSpeedSet = false;
@@ -65,6 +66,36 @@ void node_state::setPosition(coordp_bag::iterator it)
 {
    position = it;
    isPositionSet = true;
+}
+
+
+//It returns a pointer to the average distance among a node
+//and its neighbors. When the distance iterator is invalid,
+//the method returns a NULL pointer
+const double*
+node_state::getDistance() const
+{
+   const double* dist = NULL;
+   if(isDistanceSet)
+      dist = distance->value_p();
+   return dist;
+}
+
+//It returns, into a pair structure, a bool value and an
+//iterator pointing to the distance metric of a node. 
+//The bool value informs if the iterator is valid
+std::pair<bool,doublep_bag::iterator>
+node_state::getDistanceIterator()
+{
+   return std::make_pair(isDistanceSet,distance);
+}
+
+//It sets the distance iterator and turn on the flag
+//indicating the position iterator of a node is valid
+void node_state::setDistance(doublep_bag::iterator it)
+{
+   distance = it;
+   isDistanceSet = true;
 }
 
 //It returns a pointer to the speed of a node. When the
@@ -378,6 +409,13 @@ node_state::info()
       buffer += std::to_string(position->value().y);
       buffer += ")\n";
    }
+   //concatenate the speed units s
+   if(isDistanceSet)
+   {
+      buffer += "Distance among neighbors: ";
+      buffer += std::to_string(distance->value());
+      buffer += '\n';
+   }
    //concatenate the pause-time units s
    if(isPauseTimeSet)
    {
@@ -435,8 +473,10 @@ node_state::info()
          buffer += "CLUSTERED";
       else if(role->value() == Role::GATEWAY)
          buffer += "GATEWAY";
-      else
+      else if(role->value() == Role::LEADER)
          buffer += "LEADER";
+      else
+         buffer += "ISOLATED";
       buffer += '\n';
    }
    if(isLeaderHopSet)

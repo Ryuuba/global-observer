@@ -20,7 +20,7 @@ simple Clustering
       int hops; //cluster radious measured in hops
       int range @unit(m); //coberture range of mobile hosts
       //central organization delay
-      double updateDelay = default(0.1s) @unit(s);
+      double updateDelay = default(1s) @unit(s);
       //leader election criterion
       string criterion = default("degree");
 
@@ -31,7 +31,7 @@ simple Clustering
       @signal[leaderOff](type = "simtime_t");
       @statistic[leadershipTime](title = "leadership time";source = "leaderOff";record = stats, vector);
 
-      @signal[churn](type = "long");
+      @signal[churn](type = "double");
       @statistic[leaderChurn](title = "leadership time";source = "churn";record = stats, vector);
 
 

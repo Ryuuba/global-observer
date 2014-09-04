@@ -82,6 +82,20 @@ public IGlobalObserver{
       //neighborhood
       virtual std::pair<bool,uint32_t>
       getLeaderByKHopNeighborhood();
+
+      //Computes leaders according the average distance
+      //among a node and its neighbors
+      virtual std::pair<bool,uint32_t>
+      getLeaderByDistance();
+         
+      virtual std::pair<bool,uint32_t>
+      getLeaderBySpeed();
+
+      virtual std::pair<bool,uint32_t>
+      getLeaderByPauseTime();
+
+      virtual std::pair<bool,uint32_t>
+      getLeaderByFlightLength();
       
       //Creates k-hop clusters around leaders
       virtual void makeCluster(uint32_t leaderID);
@@ -92,6 +106,10 @@ public IGlobalObserver{
       //of isRoleListInitialized to true
       virtual void initializeRoleList();
       
+      //Assigns the role ISOLATED to those nodes whose 
+      //neighborhood is NULL
+      virtual void organizeIsolated();
+
       //Organizes clusters as follows: First, it checks if
       //there are leaders in the neighborhood of each
       //leader. If it happens, the neighborhoods of each
@@ -102,6 +120,12 @@ public IGlobalObserver{
       //Forms clusters around leaders when they do not have
       //leader neighbors
       virtual void organizeLeaders();
+
+      //Verifies the validity of a leader neighborhood
+      virtual bool checkNeighborhood(uint32_t leaderID);
+
+      //Verifies if a node is isolated
+      virtual bool isIsolated(uint32_t id);
 
       //Returns the leader ID of the give node
       virtual Neighborhood::Neighbor
@@ -118,7 +142,17 @@ public IGlobalObserver{
       //Colorizes a cluster. Cluster heads have a blue-icon
       //whereas clustered nodes have a gold-icon
       virtual void changeIconColor();
-      
+
+      //Prints the static cluster color table
+      virtual void
+      printColorTable
+      (std::unordered_map<uint32_t,std::string>& table);
+
+      //Updates cluster color table
+      virtual void
+      updateClusterColorTable
+      (std::unordered_map<uint32_t,std::string>& table);
+
       //Returns a string containing an HTML color
       virtual std::string pickRandomColor();
 

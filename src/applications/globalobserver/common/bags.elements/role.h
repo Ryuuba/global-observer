@@ -4,10 +4,11 @@
 
 enum class Role : uint8_t
 {
-    UNCLUSTERED = 0,
-    CLUSTERED = 1,
-    GATEWAY = 2,
-    LEADER = 3
+   ISOLATED = 0,
+   UNCLUSTERED = 1,
+   CLUSTERED = 2,
+   GATEWAY = 3,
+   LEADER = 4
 };
 
 inline std::ostream&
@@ -20,8 +21,10 @@ operator << (std::ostream& os, const Role r)
       buffer = "CLUSTERED";
    else if ( r == Role::GATEWAY)
       buffer = "GATEWAY";
-   else
+   else if ( r == Role::LEADER)
       buffer = "LEADER";
+   else
+      buffer = "ISOLATED";
    return os << buffer;
 }
 

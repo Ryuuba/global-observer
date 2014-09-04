@@ -28,6 +28,8 @@ class Neighborhood
       virtual const_iterator end() const;
       virtual unsigned int size();
       virtual unsigned int size() const;
+      virtual bool empty();
+      virtual bool empty() const;
       virtual void clear();
       virtual iterator find(uint32_t id);
       virtual const_iterator find(uint32_t id) const;

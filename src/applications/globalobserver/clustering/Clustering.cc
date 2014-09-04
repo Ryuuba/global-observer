@@ -23,7 +23,7 @@ Clustering::initialize()
    updateDelay = par("updateDelay");
    criterion = par("criterion").stringValue();
    update = new cMessage;
-   scheduleAt(simTime()+updateDelay, update);
+   scheduleAt(simTime() + 0.1, update);
    numberOfLeaders = registerSignal("leaders");
    leadershipTime = registerSignal("leaderOff");
    leaderChurn = registerSignal("churn");
@@ -43,7 +43,9 @@ Clustering::handleMessage(cMessage* msg)
          receivedMessages = 0;
       updateTable();
       emitStatistics();
-      scheduleAt(simTime()+1, msg);
+      printClusters();
+      //printTable(); 
+      scheduleAt(simTime() + updateDelay, msg);
    }
    else
       updateTable(msg);
@@ -64,9 +66,10 @@ Clustering::emitStatistics()
    }
    leaderTable.clearInvalidLeaders();
 
-   ev << "Leadership changes: "
-      << (int)leaderTable.getChanges() << endl;
-   emit(leaderChurn, (int)leaderTable.getChanges());
+   double rate =
+   (double)leaderTable.getChanges()/updateDelay.dbl();
+   ev << "Leadership changes: " << rate << endl;
+   emit(leaderChurn, rate);
 
    leaderTable.resetChanges();   
 }
@@ -99,12 +102,12 @@ Clustering::updateTable()
    makeClusters();
    if(ev.isGUI())
       changeIconColor();
-   printClusters();
 }
 
 void
 Clustering::organizeClusters()
-{  
+{
+   organizeIsolated();  
    organizeClusteredNodes();
    organizeLeaders();
 }
@@ -113,74 +116,76 @@ void
 Clustering::
 organizeLeaders()
 {
-   std::set<uint32_t>* invalid =
-   new std::set<uint32_t>;
-   std::set<uint32_t>* valid =
-   new std::set<uint32_t>;
+   std::unordered_map<uint32_t,bool> leaders;
    const rolep_bag* roleList =
    globalNodeTable.accessRoleList();
-   const Neighborhood* leaderNeighborhood;
-   const Role* neighborRole;
-   uint32_t leaderID;
    auto leaderRange = roleList->equalRange(Role::LEADER);
-   auto it = leaderRange.first;
-   bool isLeaderInvalid = false;
-   do
+
+   for(auto it =  leaderRange.first;
+            it != leaderRange.second;
+            it++)
    {
-      leaderID = it->key();
-      leaderNeighborhood =
-      globalNodeTable.getState(leaderID).getKHop();
-      if(leaderNeighborhood->size() == 0)
+      auto leaderID = it->key();
+      leaders[leaderID] = checkNeighborhood(leaderID);
+   }
+
+   for(auto& pair : leaders)
+      if(!pair.second)
+         getRidOf(pair.first);
+
+   for(auto& pair : leaders)
+      if(pair.second)
+         makeCluster(pair.first);
+
+}
+
+bool
+Clustering::checkNeighborhood(uint32_t leaderID)
+{
+   bool result = true;
+   auto leaderRange =
+   globalNodeTable.
+   accessRoleList()->equalRange(Role::LEADER);
+   const Neighborhood* neighborhood =
+   globalNodeTable.getState(leaderID).getOneHop();
+
+   for(auto it =  leaderRange.first;
+            it != leaderRange.second;
+            it++)
+      if(neighborhood->find(it->key()) !=
+         neighborhood->end())
       {
-         if(invalid->empty())
-            invalid->insert(leaderID);
-         else if(invalid->find(leaderID) != invalid->end())
-            invalid->insert(leaderID);
-         it++;
-         continue;
+         result = false;
+         break;
       }
-      for(auto& neighbor : *leaderNeighborhood)
+   return result;
+}
+
+bool
+Clustering::isIsolated(uint32_t id)
+{
+   bool result = false;
+   const Neighborhood* neighborhood =
+   globalNodeTable.getState(id).getOneHop();
+   
+   if(neighborhood->empty())
+      result = true;
+
+   return result;
+}
+
+void
+Clustering::organizeIsolated()
+{
+   for(auto&pair : globalNodeTable)
+      if(isIsolated(pair.first))
       {
-         neighborRole =
-         globalNodeTable.getState(neighbor.first).
-         getRole();  
-         if(*neighborRole == Role::LEADER)
-         {
-            if(invalid->empty())
-               invalid->insert(leaderID);
-            else if(invalid->find(leaderID) != 
-                    invalid->end())
-               invalid->insert(leaderID);
-            isLeaderInvalid = true;
-         }
+         if(*globalNodeTable.getState(pair.first).
+            getRole() == Role::LEADER)
+            leaderTable.setEndTime(pair.first, simTime());
+         globalNodeTable.
+         setRole(pair.first, Role::ISOLATED);
       }
-      if(isLeaderInvalid)
-      {
-         if(invalid->empty())
-            invalid->insert(leaderID);
-         else if(invalid->find(leaderID) == 
-                 invalid->end())
-            invalid->insert(leaderID);
-         isLeaderInvalid = false;
-      }
-      else
-      {
-         if(valid->empty())
-            valid->insert(leaderID);
-         else if(valid->find(leaderID) == 
-                 valid->end())
-            valid->insert(leaderID);
-      }
-      it++;
-   }while(it != leaderRange.second);
-   if(!invalid->empty())
-      for(auto& id : *invalid)
-         getRidOf(id);
-   if(!valid->empty())
-      for(auto& id : *valid)
-         makeCluster(id);
-   delete invalid;
-   delete valid;
 }
 
 void
@@ -241,7 +246,9 @@ Clustering::makeCluster(uint32_t leaderID)
    for(auto& neighbor : *cluster)
    {
       if(*globalNodeTable.getState(neighbor.first).
-         getRole() == Role::UNCLUSTERED)
+         getRole() == Role::UNCLUSTERED ||
+         *globalNodeTable.getState(neighbor.first).
+         getRole() == Role::ISOLATED)
       {
          //sets to neighbor the role CLUSTERED
          globalNodeTable.
@@ -317,8 +324,25 @@ Clustering::getLeader()
    std::pair<bool,uint32_t> leader;
    if(criterion == "degree")
       leader = getLeaderByDegree();
-   else if(criterion == "k-hop")
+   else if(criterion == "kHop")
       leader = getLeaderByKHopNeighborhood();
+   else if(criterion == "pauseTime")
+      leader = getLeaderByPauseTime();
+   else if(criterion == "speed")
+      leader = getLeaderBySpeed();
+//   else if(criterion == "superFlight")
+  //    leader = getLeaderBySuperFlight();
+   else if(criterion == "flightLength")
+      leader = getLeaderByFlightLength();
+//   else if(criterion == "stability")
+  //    leader = getLeaderByStability();
+   else if(criterion == "distance")
+      leader = getLeaderByDistance();
+   else
+   {
+      ev << "Criterion invalid" << endl;
+      endSimulation();
+   }
    return leader;
 }
 
@@ -395,6 +419,145 @@ Clustering::getLeaderByKHopNeighborhood()
    return std::make_pair(isLeaderInitialized, leaderID);
 }
 
+std::pair<bool,uint32_t>
+Clustering::getLeaderBySpeed()
+{
+   bool isLeaderInitialized = false;
+   uint32_t tempID, leaderID;
+   double speed, minSpeed;
+   const rolep_bag* roleList =
+         globalNodeTable.accessRoleList();
+   auto unclusteredNodeRange =
+   roleList->equalRange(Role::UNCLUSTERED);
+
+   for(auto it =  unclusteredNodeRange.first;
+            it != unclusteredNodeRange.second;
+            it ++)
+   {
+      tempID = *globalNodeTable.getState(it->key()).
+                getUID();
+      speed = *globalNodeTable.getState(it->key()).
+               getSpeed();
+      if(!isLeaderInitialized)
+      {
+         leaderID = tempID;
+         minSpeed = speed;
+         isLeaderInitialized = true;
+      }
+      else if(speed <= minSpeed && tempID < leaderID)
+      {
+         leaderID = tempID;
+         minSpeed = speed;
+      }
+   }
+   return std::make_pair(isLeaderInitialized, leaderID);
+}
+
+std::pair<bool,uint32_t>
+Clustering::getLeaderByPauseTime()
+{
+   bool isLeaderInitialized = false;
+   uint32_t tempID, leaderID;
+   simtime_t pauseTime, minPauseTime;
+   const rolep_bag* roleList =
+         globalNodeTable.accessRoleList();
+   auto unclusteredNodeRange =
+   roleList->equalRange(Role::UNCLUSTERED);
+
+   for(auto it =  unclusteredNodeRange.first;
+            it != unclusteredNodeRange.second;
+            it ++)
+   {
+      tempID = *globalNodeTable.getState(it->key()).
+                getUID();
+      pauseTime = *globalNodeTable.getState(it->key()).
+               getPauseTime();
+      if(!isLeaderInitialized)
+      {
+         leaderID = tempID;
+         minPauseTime = pauseTime;
+         isLeaderInitialized = true;
+      }
+      else if(pauseTime <= minPauseTime && 
+              tempID < leaderID)
+      {
+         leaderID = tempID;
+         minPauseTime = pauseTime;
+      }
+   }
+   return std::make_pair(isLeaderInitialized, leaderID);
+}
+
+std::pair<bool,uint32_t>
+Clustering::getLeaderByDistance()
+{
+   bool isLeaderInitialized = false;
+   uint32_t tempID, leaderID;
+   double distance, minDistance;
+   const rolep_bag* roleList =
+         globalNodeTable.accessRoleList();
+   auto unclusteredNodeRange =
+   roleList->equalRange(Role::UNCLUSTERED);
+
+   for(auto it =  unclusteredNodeRange.first;
+            it != unclusteredNodeRange.second;
+            it ++)
+   {
+      tempID = *globalNodeTable.getState(it->key()).
+                getUID();
+      distance = *globalNodeTable.getState(it->key()).
+                  getDistance();
+      if(!isLeaderInitialized)
+      {
+         leaderID = tempID;
+         minDistance = distance;
+         isLeaderInitialized = true;
+      }
+      else if(distance <= minDistance && 
+              tempID < leaderID)
+      {
+         leaderID = tempID;
+         minDistance = distance;
+      }
+   }
+   return std::make_pair(isLeaderInitialized, leaderID);
+}
+
+std::pair<bool,uint32_t>
+Clustering::getLeaderByFlightLength()
+{
+   bool isLeaderInitialized = false;
+   uint32_t tempID, leaderID;
+   double flightLength, minFlightLength;
+   const rolep_bag* roleList =
+         globalNodeTable.accessRoleList();
+   auto unclusteredNodeRange =
+   roleList->equalRange(Role::UNCLUSTERED);
+
+   for(auto it =  unclusteredNodeRange.first;
+            it != unclusteredNodeRange.second;
+            it ++)
+   {
+      tempID = *globalNodeTable.getState(it->key()).
+                getUID();
+      flightLength = *globalNodeTable.getState(it->key()).
+                      getFlightLength();
+      if(!isLeaderInitialized)
+      {
+         leaderID = tempID;
+         minFlightLength = flightLength;
+         isLeaderInitialized = true;
+      }
+      else if(flightLength <= minFlightLength && 
+              tempID < leaderID)
+      {
+         leaderID = tempID;
+         minFlightLength = flightLength;
+      }
+   }
+   return std::make_pair(isLeaderInitialized, leaderID);
+}
+
 void
 Clustering::initializeRoleList()
 {
@@ -434,6 +597,8 @@ Clustering::computeNeighborhood()
 Neighborhood
 Clustering::computeNeighborhood(uint32_t nodeID)
 {
+   std::list<double> distances;
+   double averageDistance = 0.0;
    Neighborhood n;
    //Quick access to the node data
    const Coord* mypos = 
@@ -444,13 +609,23 @@ Clustering::computeNeighborhood(uint32_t nodeID)
       const Coord* neighbor_pos = 
       pair.second.getPosition();
       const uint32_t* neighborID = pair.second.getUID();
-      if
-      (
-         nodeID != *neighborID &&
-         mypos->distance(*neighbor_pos) <= range
-      )
+      if(nodeID != *neighborID &&
+         mypos->distance(*neighbor_pos) <= range)
+      {
          n.insert(*neighborID, 1);
+         distances.
+         push_back(mypos->distance(*neighbor_pos));
+      }
    }
+   if(!distances.empty())
+   {
+      for(auto& dist : distances)
+         averageDistance += dist;
+      globalNodeTable.setDistance
+      (nodeID, averageDistance/distances.size());
+   }
+   else
+      globalNodeTable.setDistance(nodeID, -1.0);
    return n;
 }
 
@@ -490,13 +665,10 @@ Clustering::changeIconColor()
    static std::unordered_map<uint32_t,std::string>
    clusterColorTable;
 
+   //printColorTable(clusterColorTable);
    //erases all staled datum
-   if(!clusterColorTable.empty())
-      for(auto& leader : clusterColorTable)
-         if(leaderTable.find(leader.first) ==
-            leaderTable.end())
-            clusterColorTable.erase(leaderID);
-
+   updateClusterColorTable(clusterColorTable);
+   
    auto leaderRange =
    roleList->equalRange(Role::LEADER);
    for(auto it =  leaderRange.first;
@@ -549,6 +721,22 @@ Clustering::changeIconColor()
    roleList->equalRange(Role::UNCLUSTERED);
    for(auto it =  unclusteredNodeRange.first;
             it != unclusteredNodeRange.second;
+            it ++)
+   {
+      nodeID = it->key();
+      host = simulation.
+             getSystemModule()->
+             getSubmodule("host", nodeID);
+      //contains icon attributes of a host
+      cDisplayString& displayStr =
+      host->getDisplayString();
+      displayStr.parse("i=device/pocketpc_vs");
+   }
+
+   auto isolatedNodeRange =
+   roleList->equalRange(Role::ISOLATED);
+   for(auto it =  isolatedNodeRange.first;
+            it != isolatedNodeRange.second;
             it ++)
    {
       nodeID = it->key();
@@ -616,6 +804,20 @@ Clustering::pickRandomColor()
 }
 
 void
+Clustering::updateClusterColorTable
+(std::unordered_map<uint32_t,std::string>& table)
+{
+   std::list<uint32_t> staledLeaders;
+
+   for(auto& leader : table)
+      if(leaderTable.find(leader.first) == 
+         leaderTable.end())
+            staledLeaders.push_back(leader.first);
+   for(auto& leaderID : staledLeaders)
+      table.erase(leaderID);      
+}
+
+void
 Clustering::printClusters()
 {
    const uint32p_bag* cidList =
@@ -645,11 +847,11 @@ Clustering::printClusters()
       nodes.clear();
    }
 
-   ev << "Unclustered nodes: ";
-   auto unclusteredNodeRange =
-   roleList->equalRange(Role::UNCLUSTERED);
-   for(auto it =  unclusteredNodeRange.first;
-            it != unclusteredNodeRange.second;
+   ev << "Isolated node IDs: ";
+   auto isolatedNodeRange =
+   roleList->equalRange(Role::ISOLATED);
+   for(auto it =  isolatedNodeRange.first;
+            it != isolatedNodeRange.second;
             it ++)
       nodes.insert(it->key());
    for(auto& node : nodes)
@@ -663,4 +865,14 @@ Clustering::printTable()
    ev << "Global node table contains: " << endl;
    for(auto& pair : globalNodeTable)
       ev << pair.second.info();
+}
+
+void
+Clustering::printColorTable
+(std::unordered_map<uint32_t,std::string>& table)
+{
+   ev << "Color table:" << endl;
+   for(auto& pair : table)
+      ev << "ID: " << pair.first << ' '
+         << "Color: " << pair.second << endl;
 }

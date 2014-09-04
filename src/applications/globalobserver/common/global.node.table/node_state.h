@@ -30,6 +30,8 @@ class node_state
       coordp_bag::iterator position;
       bool isPositionSet;
       simtimep_bag::iterator pause_time;
+      bool isDistanceSet;
+      doublep_bag::iterator distance;
       bool isPauseTimeSet;
       simtimep_bag::iterator motion_time;
       bool isMotionTimeSet;
@@ -59,6 +61,7 @@ class node_state
       //are only-read.
       virtual const uint32_t* getUID() const;
       virtual const Coord* getPosition() const;
+      virtual const double* getDistance() const;
       virtual const double* getSpeed() const;
       virtual const double* getFlightLength() const;
       virtual const simtime_t* getPauseTime() const;
@@ -77,6 +80,8 @@ class node_state
       //cannot be initialized with a NULL value
       virtual std::pair<bool,coordp_bag::iterator>
               getPositionIterator();
+      virtual std::pair<bool,doublep_bag::iterator>
+              getDistanceIterator();
       virtual std::pair<bool,doublep_bag::iterator>
               getSpeedIterator();
       virtual std::pair<bool,doublep_bag::iterator>
@@ -100,6 +105,7 @@ class node_state
       //arguments
       virtual void setUID(uint32_t id);
       virtual void setPosition(coordp_bag::iterator it);
+      virtual void setDistance(doublep_bag::iterator it);
       virtual void setSpeed(doublep_bag::iterator it);
       virtual void
               setFlightLength(doublep_bag::iterator it);

@@ -137,8 +137,11 @@ operator << (std::ostream& os, rolep_bag& bag)
       case Role::GATEWAY:
          status = "GATEWAY";
          break;
-      default:
+      case Role::LEADER:
          status = "LEADER";
+         break;
+      default:
+         status = "ISOLATED";
          break;
    }
 

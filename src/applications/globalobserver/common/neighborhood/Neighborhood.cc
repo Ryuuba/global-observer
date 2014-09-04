@@ -78,6 +78,19 @@ Neighborhood::size() const
    return neighborhood.size();
 }
 
+bool
+Neighborhood::empty()
+{
+   return neighborhood.empty();
+}
+
+bool
+Neighborhood::empty() const
+{
+   return neighborhood.empty();
+}
+
+
 void
 Neighborhood::clear()
 {

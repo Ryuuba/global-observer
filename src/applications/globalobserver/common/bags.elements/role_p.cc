@@ -3,7 +3,7 @@
 role_p::role_p()
 {
    pair.first = 0;
-   pair.second = Role::UNCLUSTERED;
+   pair.second = Role::ISOLATED;
 }
 
 role_p::~role_p(){ }

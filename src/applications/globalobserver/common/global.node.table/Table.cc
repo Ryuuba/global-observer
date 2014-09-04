@@ -32,6 +32,33 @@ Table::setPosition(uint32_t id, Coord p)
 }
 
 void
+Table::setDistance(uint32_t id, double d)
+{
+   //If ID corresponds to a new node then it inserts
+   //a new empty state
+   if(table.find(id) == table.end())
+   {
+		node_state state;
+		state.setUID(id);
+      table[id] = state;
+   }
+   //otherwise, if the iterator contained in the state
+   //is initialized, then it erases from the position
+   //list the corresponding item
+   else if(table[id].getDistanceIterator().first)
+	{
+	   //it gets the old iterator
+      auto it = table[id].getDistanceIterator().second;
+      //it erases from the position list
+   	distance_list.erase(it);
+   }
+   //it inserts the new pair into the position list
+   auto it = distance_list.insert(id, d);
+   //it updates the position list iterator
+   table[id].setDistance(it);
+}
+
+void
 Table::setSpeed(uint32_t id, double s)
 {
    if(table.find(id) == table.end())
@@ -210,6 +237,24 @@ Table::getPositionListMax() const
 }
 
 const double_p*
+Table::getDistanceListMin() const
+{
+   const double_p* distance = NULL;
+   if(!distance_list.empty())
+      distance = &(*distance_list.begin());
+   return distance;
+}
+
+const double_p*
+Table::getDistanceListMax() const
+{
+   const double_p* distance = NULL;
+   if(!distance_list.empty())
+      distance = &(*distance_list.max());
+   return distance;
+}
+
+const double_p*
 Table::getSpeedListMin() const
 {
    const double_p* speed = NULL;
@@ -368,6 +413,15 @@ Table::accessPositionList() const
 }
 
 const doublep_bag*
+Table::accessDistanceList() const
+{
+   const doublep_bag* distanceList = NULL;
+   if(!distance_list.empty())
+      distanceList = &distance_list;
+   return distanceList;
+}
+
+const doublep_bag*
 Table::accessSpeedList() const
 {
    const doublep_bag* speedList = NULL;
@@ -455,6 +509,9 @@ Table::erase(uint32_t id)
       if(table[id].getPositionIterator().first)
          position_list.
          erase(table[id].getPositionIterator().second);
+      if(table[id].getDistanceIterator().first)
+         distance_list.
+         erase(table[id].getDistanceIterator().second);      
       if(table[id].getSpeedIterator().first)
          speed_list.
          erase(table[id].getSpeedIterator().second);
@@ -487,6 +544,7 @@ void
 Table::clear()
 {
    position_list.clear();
+   distance_list.clear();
    speed_list.clear();
    flight_length_list.clear();
    pause_time_list.clear();

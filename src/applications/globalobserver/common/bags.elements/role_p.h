@@ -40,8 +40,10 @@ operator << (std::ostream& os, const role_p& pair_t)
       buffer = "CLUSTERED";
    else if ( pair_t.value() == Role::GATEWAY)
       buffer = "GATEWAY";
-   else
+   else if (pair_t.value() == Role::LEADER)
       buffer = "LEADER";
+   else
+      buffer = "ISOLATED";
    return os << pair_t.key() << ", "
              << buffer;
 }

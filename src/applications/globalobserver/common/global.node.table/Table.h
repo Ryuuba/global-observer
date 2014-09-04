@@ -12,6 +12,7 @@ class Table
 {
    protected:
       coordp_bag position_list;
+      doublep_bag distance_list;
       doublep_bag speed_list;
       doublep_bag flight_length_list;
       simtimep_bag pause_time_list;
@@ -33,6 +34,7 @@ class Table
       //procedure of setter methods is detailed in
       //the setPosition method
       virtual void setPosition(uint32_t id, Coord p);
+      virtual void setDistance(uint32_t id, double d);
       virtual void setSpeed(uint32_t id, double s);
       virtual void setFlightLength(uint32_t id, double f);
       virtual void setPauseTime(uint32_t id, simtime_t p);
@@ -55,6 +57,8 @@ class Table
       //TODO:return pairs instead of pointers
       virtual const coord_p* getPositionListMin() const;
       virtual const coord_p* getPositionListMax() const;
+      virtual const double_p* getDistanceListMin() const;
+      virtual const double_p* getDistanceListMax() const;
       virtual const double_p* getSpeedListMin() const;
       virtual const double_p* getSpeedListMax() const;
       virtual const double_p*
@@ -87,6 +91,8 @@ class Table
               getCidListMax() const;
       //methods to only-read the lists
       virtual const coordp_bag* accessPositionList() const;
+      virtual const doublep_bag*
+              accessDistanceList() const; 
       virtual const doublep_bag* accessSpeedList() const;
       virtual const doublep_bag*
               accessFlightLengthList() const;
