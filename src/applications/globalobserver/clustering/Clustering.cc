@@ -11,6 +11,8 @@ Clustering::Clustering()
    receivedMessages = 0;
    criterion = " ";
    isRoleListInitialized = false;
+   cutTime = 0.0;
+   filter = false;
 }
 
 Clustering::~Clustering(){}
@@ -27,6 +29,8 @@ Clustering::initialize()
    numberOfLeaders = registerSignal("leaders");
    leadershipTime = registerSignal("leaderOff");
    leaderChurn = registerSignal("churn");
+   cutTime = par("cutTime");
+   filter = par("filter").boolValue();
 }
 
 void
@@ -54,24 +58,59 @@ Clustering::handleMessage(cMessage* msg)
 void
 Clustering::emitStatistics()
 {
+   if(filter)
+      filterStatistics();
+
    ev << "Number of leaders: "
       << (int)leaderTable.size() << endl;
-   emit(numberOfLeaders, (int)leaderTable.size());   
+   emit(numberOfLeaders, (int)leaderTable.size());
    
    ev << leaderTable.info();
    while(leaderTable.getInvalidLeaderNumber() > 0)
    {
-      auto period = leaderTable.getPeriod();
+      auto period = leaderTable.popPeriod();
       emit(leadershipTime, period);
    }
-   leaderTable.clearInvalidLeaders();
 
    double rate =
    (double)leaderTable.getChanges()/updateDelay.dbl();
    ev << "Leadership changes: " << rate << endl;
    emit(leaderChurn, rate);
 
-   leaderTable.resetChanges();   
+   if(filter)
+      leaderTable.restoreFilteredLeaders();
+   
+   leaderTable.clearInvalidLeaders();
+   leaderTable.resetChanges();
+}
+
+void
+Clustering::filterStatistics()
+{
+   std::list<uint32_t> filteredLeaders;
+   leaderTable.resetChanges();
+   
+   for(auto it = leaderTable.invalidLeaderTableBegin();
+            it != leaderTable.invalidLeaderTableEnd();
+            it ++)
+   {
+      if(leaderTable.getPeriod(it->first) < cutTime)
+         filteredLeaders.push_back(it->first);
+      else
+         leaderTable.incrementChanges();
+   }
+
+   for(auto& pair : leaderTable)
+   {
+      if(simTime() - pair.second.first < cutTime)
+         filteredLeaders.push_back(pair.first);
+      else if(simTime() - pair.second.first == cutTime)
+         leaderTable.incrementChanges();
+   }
+
+  
+   for(auto& leaderID : filteredLeaders)
+      leaderTable.insertFilteredLeader(leaderID);
 }
 
 void

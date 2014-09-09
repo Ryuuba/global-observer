@@ -19,19 +19,27 @@ class LeaderTable
       LeaderTable();
       ~LeaderTable();
       virtual bool insertLeader(uint32_t id);
+      virtual bool insertFilteredLeader(uint32_t id);
+      virtual void restoreFilteredLeaders();
       virtual bool
       setStartTime(uint32_t id, simtime_t start);
       virtual bool
       setEndTime(uint32_t id, simtime_t end);
       virtual uint8_t getInvalidLeaderNumber();
-      virtual simtime_t getPeriod();
+      virtual uint8_t getFilteredLeaderNumber();
+      virtual simtime_t popPeriod();
+      virtual simtime_t getPeriod(uint32_t id);
       virtual iterator begin();
       virtual iterator end();
+      virtual iterator invalidLeaderTableBegin();
+      virtual iterator invalidLeaderTableEnd();
       virtual unsigned int size();
       virtual uint32_t erase(uint32_t id);
       virtual void clearInvalidLeaders();
       virtual void clear();
       virtual uint8_t getChanges();
+      virtual void incrementChanges();
+      virtual void decrementChanges();
       virtual void resetChanges();
       virtual iterator find(uint32_t id);
       virtual std::string info();
@@ -40,6 +48,9 @@ class LeaderTable
       std::unordered_map<uint32_t,period_t> table;
       //table that temporary stores leaders to be removed
       std::unordered_map<uint32_t,period_t> _table;
+      //table storing filtered leaders
+      std::unordered_map<uint32_t,period_t>
+      filteredLeaders;
       uint8_t changes;
 };
 

@@ -20,9 +20,14 @@ simple Clustering
       int hops; //cluster radious measured in hops
       int range @unit(m); //coberture range of mobile hosts
       //central organization delay
-      double updateDelay = default(1s) @unit(s);
+      int updateDelay = default(1s) @unit(s);
       //leader election criterion
       string criterion = default("degree");
+      //limit time to consider statistics
+      int cutTime = default(60s) @unit(s);
+      //bool value to activate the gathering of filtered
+      //statistics
+      bool filter = default(false);
 
       //statistics
       @signal[leaders](type = "long");

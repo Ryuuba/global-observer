@@ -31,6 +31,14 @@ public IGlobalObserver{
       simsignal_t numberOfLeaders;
       simsignal_t leadershipTime;
       simsignal_t leaderChurn;
+      //Bool value that indicates statistics only will be
+      //gathered from clusters whose size is greater than 
+      //cut value
+      bool filter;
+      //Numerical value establishing a limit to discard 
+      //statistics from clusters whose size is less than
+      //cut value
+      simtime_t cutTime;
       //Datastructure to store the leadership-time
       LeaderTable leaderTable;
    protected:
@@ -156,9 +164,15 @@ public IGlobalObserver{
       //Returns a string containing an HTML color
       virtual std::string pickRandomColor();
 
-      //emits the statistics of the leadershipTime and the
-      //number of leaders
+      //emits the following statistics: number of leaders,
+      //leader churn, and leadership time. If filter bool
+      //value equals true, then it only emits statistics 
+      //from clusters whose size is greater than cutValue
       virtual void emitStatistics();
+
+      //removes from leader table such leaders whose
+      //cluster size is less than cutValue
+      virtual void filterStatistics();
 
       //Prints cluster information
       virtual void printClusters();

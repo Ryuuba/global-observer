@@ -54,6 +54,24 @@ uint32p_bag::count(uint32_p pair_t)
    return bag.count(pair_t);
 }
 
+//bags are ordered according to the value of each pair
+//<id,value>
+unsigned int
+uint32p_bag::count(uint32_t value)
+{
+   uint32_p temp;
+   temp.set(0,value);
+   return bag.count(temp);
+}
+
+unsigned int
+uint32p_bag::count(uint32_t value) const
+{
+   uint32_p temp;
+   temp.set(0, value);
+   return bag.count(temp);
+}
+
 void
 uint32p_bag::clear()
 {

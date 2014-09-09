@@ -22,6 +22,8 @@ class uint32p_bag
       virtual iterator max() const;
       virtual iterator end() const;
       virtual unsigned int count(uint32_p pair_t);
+      virtual unsigned int count(uint32_t value);
+      virtual unsigned int count(uint32_t value) const;
       virtual unsigned int size();
       virtual void clear();
       virtual bool empty() const;
